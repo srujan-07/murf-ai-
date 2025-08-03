@@ -21,8 +21,19 @@ class VoiceAgentsApp {
         }
     }
 
-    async makeApiCall(endpoint) {
-        const response = await fetch(`${this.baseUrl}${endpoint}`);
+    async makeApiCall(endpoint, method = 'GET', data = null) {
+        const options = {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        };
+        
+        if (data && method !== 'GET') {
+            options.body = JSON.stringify(data);
+        }
+        
+        const response = await fetch(`${this.baseUrl}${endpoint}`, options);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -54,6 +65,73 @@ async function getVoiceAgents() {
     try {
         const response = await app.makeApiCall('/api/voice-agents');
         app.displayResponse(response);
+    } catch (error) {
+        app.displayError(error);
+    }
+}
+
+function testTTS() {
+    const ttsInput = document.getElementById('tts-input');
+    const isVisible = ttsInput.style.display !== 'none';
+    
+    if (isVisible) {
+        ttsInput.style.display = 'none';
+        document.getElementById('audio-player').style.display = 'none';
+    } else {
+        ttsInput.style.display = 'block';
+        // Set default text
+        document.getElementById('tts-text').value = 'Hello! This is Day 2 of my 30 Days of Voice Agents challenge. I have successfully integrated Murf AI for text-to-speech conversion!';
+    }
+}
+
+async function generateTTS() {
+    const text = document.getElementById('tts-text').value.trim();
+    const voiceId = document.getElementById('voice-select').value;
+    
+    if (!text) {
+        alert('Please enter some text to convert to speech!');
+        return;
+    }
+    
+    try {
+        // Show loading
+        const responseDiv = document.getElementById('response');
+        responseDiv.innerHTML = '<div style="color: #667eea;"><strong>🎤 Generating audio...</strong> Please wait while Murf creates your speech.</div>';
+        
+        const response = await app.makeApiCall('/api/tts/generate', 'POST', {
+            text: text,
+            voice_id: voiceId
+        });
+        
+        if (response.success && response.audio_url) {
+            // Show success message
+            app.displayResponse({
+                ...response,
+                message: `✅ Audio generated successfully! Duration: ~${Math.ceil(text.length / 10)} seconds`
+            });
+            
+            // Show audio player
+            const audioPlayer = document.getElementById('audio-player');
+            const audioElement = document.getElementById('audio-element');
+            const audioLink = document.getElementById('audio-link');
+            
+            audioElement.src = response.audio_url;
+            audioLink.href = response.audio_url;
+            audioLink.textContent = response.audio_url;
+            
+            audioPlayer.style.display = 'block';
+            
+            // Auto-play the audio (if browser allows)
+            try {
+                await audioElement.play();
+            } catch (playError) {
+                console.log('Auto-play prevented by browser. User needs to click play.');
+            }
+            
+        } else {
+            app.displayError(new Error('TTS generation failed: ' + response.message));
+        }
+        
     } catch (error) {
         app.displayError(error);
     }
