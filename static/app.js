@@ -13,10 +13,10 @@ class VoiceAgentsApp {
     async checkHealthOnLoad() {
         try {
             const response = await this.makeApiCall('/api/health');
-            document.getElementById('status').textContent = 'Connected ✅';
+            document.getElementById('status').textContent = 'API Ready ✅';
             document.getElementById('status').style.color = '#28a745';
         } catch (error) {
-            document.getElementById('status').textContent = 'Disconnected ❌';
+            document.getElementById('status').textContent = 'API Disconnected ❌';
             document.getElementById('status').style.color = '#dc3545';
         }
     }
@@ -51,7 +51,105 @@ class VoiceAgentsApp {
     }
 }
 
-// Global functions for button clicks
+// Day 3: Main TTS function - Generate and Play Audio
+async function generateAndPlayAudio() {
+    const textInput = document.getElementById('text-input');
+    const voiceSelector = document.getElementById('voice-selector');
+    const submitBtn = document.getElementById('submit-btn');
+    const audioSection = document.getElementById('audio-section');
+    const audioPlayer = document.getElementById('audio-player');
+    const urlDisplay = document.getElementById('audio-url-display');
+    const responseDiv = document.getElementById('response');
+    
+    const text = textInput.value.trim();
+    const voiceId = voiceSelector.value;
+    
+    // Validation
+    if (!text) {
+        alert('Please enter some text to convert to speech!');
+        textInput.focus();
+        return;
+    }
+    
+    if (text.length > 3000) {
+        alert('Text is too long! Please keep it under 3000 characters.');
+        return;
+    }
+    
+    try {
+        // Update UI - Loading state
+        submitBtn.disabled = true;
+        submitBtn.textContent = '🔄 Generating Audio...';
+        urlDisplay.textContent = 'Generating audio, please wait...';
+        audioSection.style.display = 'block';
+        
+        // Show progress in response area
+        responseDiv.innerHTML = `
+            <div style="color: #667eea;">
+                <strong>🎤 Processing your request...</strong><br>
+                Text: "${text.substring(0, 100)}${text.length > 100 ? '...' : ''}"<br>
+                Voice: ${voiceSelector.options[voiceSelector.selectedIndex].text}<br>
+                Status: Calling Murf API...
+            </div>
+        `;
+        
+        // Call the TTS API
+        const response = await app.makeApiCall('/api/tts/generate', 'POST', {
+            text: text,
+            voice_id: voiceId
+        });
+        
+        if (response.success && response.audio_url) {
+            // Success! Update the audio player
+            audioPlayer.src = response.audio_url;
+            urlDisplay.textContent = response.audio_url;
+            
+            // Update response area with success info
+            responseDiv.innerHTML = `
+                <div style="color: #28a745;">
+                    <strong>✅ Audio Generated Successfully!</strong><br>
+                    ${response.message}<br>
+                    Audio ID: ${response.audio_id || 'N/A'}<br>
+                    Ready to play!
+                </div>
+            `;
+            
+            // Attempt to auto-play (browsers may prevent this)
+            try {
+                await audioPlayer.play();
+                console.log('Audio started playing automatically');
+            } catch (playError) {
+                console.log('Auto-play prevented by browser - user must click play');
+                responseDiv.innerHTML += `<br><small style="color: #ffc107;">Click the play button to start audio ▶️</small>`;
+            }
+            
+        } else {
+            throw new Error(response.message || 'TTS generation failed');
+        }
+        
+    } catch (error) {
+        console.error('TTS Error:', error);
+        
+        // Show error in UI
+        responseDiv.innerHTML = `
+            <div style="color: #dc3545;">
+                <strong>❌ Error generating audio:</strong><br>
+                ${error.message}<br>
+                Please try again or check your connection.
+            </div>
+        `;
+        
+        urlDisplay.textContent = 'Error occurred during generation';
+        audioSection.style.display = 'none';
+        
+    } finally {
+        // Reset button state
+        submitBtn.disabled = false;
+        submitBtn.textContent = '🔊 Generate & Play Audio';
+    }
+}
+
+// Legacy functions for additional controls
 async function checkHealth() {
     try {
         const response = await app.makeApiCall('/api/health');
@@ -70,72 +168,21 @@ async function getVoiceAgents() {
     }
 }
 
-function testTTS() {
-    const ttsInput = document.getElementById('tts-input');
-    const isVisible = ttsInput.style.display !== 'none';
-    
-    if (isVisible) {
-        ttsInput.style.display = 'none';
-        document.getElementById('audio-player').style.display = 'none';
-    } else {
-        ttsInput.style.display = 'block';
-        // Set default text
-        document.getElementById('tts-text').value = 'Hello! This is Day 2 of my 30 Days of Voice Agents challenge. I have successfully integrated Murf AI for text-to-speech conversion!';
-    }
-}
-
-async function generateTTS() {
-    const text = document.getElementById('tts-text').value.trim();
-    const voiceId = document.getElementById('voice-select').value;
-    
-    if (!text) {
-        alert('Please enter some text to convert to speech!');
-        return;
-    }
-    
-    try {
-        // Show loading
-        const responseDiv = document.getElementById('response');
-        responseDiv.innerHTML = '<div style="color: #667eea;"><strong>🎤 Generating audio...</strong> Please wait while Murf creates your speech.</div>';
-        
-        const response = await app.makeApiCall('/api/tts/generate', 'POST', {
-            text: text,
-            voice_id: voiceId
+// Keyboard shortcut: Enter to submit (Ctrl+Enter for new line)
+document.addEventListener('DOMContentLoaded', () => {
+    const textInput = document.getElementById('text-input');
+    if (textInput) {
+        textInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.ctrlKey && !e.shiftKey) {
+                e.preventDefault();
+                generateAndPlayAudio();
+            }
         });
         
-        if (response.success && response.audio_url) {
-            // Show success message
-            app.displayResponse({
-                ...response,
-                message: `✅ Audio generated successfully! Duration: ~${Math.ceil(text.length / 10)} seconds`
-            });
-            
-            // Show audio player
-            const audioPlayer = document.getElementById('audio-player');
-            const audioElement = document.getElementById('audio-element');
-            const audioLink = document.getElementById('audio-link');
-            
-            audioElement.src = response.audio_url;
-            audioLink.href = response.audio_url;
-            audioLink.textContent = response.audio_url;
-            
-            audioPlayer.style.display = 'block';
-            
-            // Auto-play the audio (if browser allows)
-            try {
-                await audioElement.play();
-            } catch (playError) {
-                console.log('Auto-play prevented by browser. User needs to click play.');
-            }
-            
-        } else {
-            app.displayError(new Error('TTS generation failed: ' + response.message));
-        }
-        
-    } catch (error) {
-        app.displayError(error);
+        // Set default text for demo
+        textInput.value = 'Hello! Welcome to Day 3 of the 30 Days of Voice Agents challenge. Today we are implementing audio playback functionality using HTML audio elements.';
     }
-}
+});
 
 // Initialize the app when the DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {

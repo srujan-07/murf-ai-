@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>30 Days of Voice Agents - Day 1</title>
+    <title>30 Days of Voice Agents - Day 3</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -67,80 +67,128 @@
             min-height: 50px;
             text-align: left;
         }
-        #audio-player {
+        
+        /* Day 3 Specific Styles */
+        #tts-interface {
             background: #f8f9fa;
             border: 1px solid #dee2e6;
-            border-radius: 10px;
-            padding: 20px;
-            margin-top: 20px;
-        }
-        #audio-player h3 {
-            margin-top: 0;
-            color: #495057;
-        }
-        #audio-link {
-            word-break: break-all;
-            font-family: 'Courier New', monospace;
-            background: #ffffff;
-            padding: 8px 12px;
-            border: 1px solid #ced4da;
-            border-radius: 5px;
-            display: inline-block;
-            max-width: 100%;
-            text-decoration: none;
-            color: #0066cc;
-            font-size: 14px;
-            line-height: 1.4;
-        }
-        #audio-link:hover {
-            background: #e9ecef;
-            text-decoration: underline;
-        }
-        .url-container {
+            border-radius: 15px;
+            padding: 25px;
+            margin: 25px 0;
             text-align: left;
-            margin-top: 10px;
         }
-        .url-label {
-            font-weight: bold;
-            margin-bottom: 5px;
-            display: block;
-            color: #495057;
+        
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
         }
-        #tts-input {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 10px;
-            padding: 20px;
-            margin: 20px 0;
-        }
-        #tts-text {
+        
+        #text-input {
             width: 100%;
-            height: 80px;
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid #ced4da;
+            padding: 15px;
+            border: 2px solid #ced4da;
+            border-radius: 10px;
             font-family: inherit;
-            font-size: 14px;
+            font-size: 16px;
             resize: vertical;
+            min-height: 100px;
             box-sizing: border-box;
+            transition: border-color 0.3s ease;
         }
-        #tts-text:focus {
+        
+        #text-input:focus {
             border-color: #667eea;
             outline: none;
-            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.25);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.25);
         }
-        #voice-select {
-            padding: 10px 12px;
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        #voice-selector {
+            padding: 12px 15px;
+            border: 2px solid #ced4da;
             border-radius: 8px;
-            border: 1px solid #ced4da;
             font-size: 14px;
             background: white;
             min-width: 200px;
+            cursor: pointer;
         }
-        #voice-select:focus {
+        
+        #voice-selector:focus {
             border-color: #667eea;
             outline: none;
-            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.25);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.25);
+        }
+        
+        #submit-btn {
+            padding: 12px 25px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        #submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        #submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        #audio-section {
+            background: #e8f5e8;
+            border: 1px solid #c3e6c3;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 25px 0;
+            text-align: left;
+        }
+        
+        #audio-player {
+            width: 100%;
+            height: 50px;
+            margin: 15px 0;
+            border-radius: 8px;
+        }
+        
+        .audio-info {
+            margin-top: 15px;
+        }
+        
+        .url-display {
+            background: white;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            padding: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            word-break: break-all;
+            max-height: 100px;
+            overflow-y: auto;
+            color: #495057;
+        }
+        
+        .additional-controls {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #dee2e6;
+        }
+        
+        .additional-controls button {
+            margin: 5px;
+            padding: 8px 16px;
+            font-size: 14px;
         }
         .microphone {
             font-size: 3em;
@@ -153,44 +201,54 @@
     <div class="container">
         <div class="microphone">🎤</div>
         <h1>Voice Agents Project</h1>
-        <div class="day-badge">Day 1: Project Setup</div>
+        <div class="day-badge">Day 3: Playing Back TTS Audio</div>
         
         <div class="status">
-            <strong>Status:</strong> <span id="status">Connecting...</span>
+            <strong>Status:</strong> <span id="status">Ready to generate speech</span>
         </div>
         
-        <div>
-            <button onclick="checkHealth()">Check Backend Health</button>
-            <button onclick="getVoiceAgents()">Get Voice Agents</button>
-            <button onclick="testTTS()">🎤 Test TTS</button>
-        </div>
-        
-        <div id="tts-input" style="display: none;">
-            <h4 style="margin-top: 0; color: #495057;">🎤 Text-to-Speech Generator</h4>
-            <textarea id="tts-text" placeholder="Enter text to convert to speech..."></textarea>
-            <br><br>
-            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                <select id="voice-select">
-                    <option value="en-US-natalie">Natalie (US Female)</option>
-                    <option value="en-US-davis">Davis (US Male)</option>
-                    <option value="en-US-jane">Jane (US Female)</option>
-                    <option value="en-US-mike">Mike (US Male)</option>
-                    <option value="en-UK-emma">Emma (UK Female)</option>
-                </select>
-                <button onclick="generateTTS()">🔊 Generate Audio</button>
+        <!-- Day 3: Main TTS Interface -->
+        <div id="tts-interface">
+            <h4 style="margin-bottom: 15px; color: #495057;">🎤 Enter Text to Convert to Speech</h4>
+            
+            <div class="input-group">
+                <textarea 
+                    id="text-input" 
+                    placeholder="Type your text here... (e.g., 'Hello! Welcome to Day 3 of the Voice Agents challenge!')"
+                    rows="4"></textarea>
+                
+                <div class="controls">
+                    <select id="voice-selector">
+                        <option value="en-US-natalie">Natalie (US Female)</option>
+                        <option value="en-US-davis">Davis (US Male)</option>
+                        <option value="en-US-jane">Jane (US Female)</option>
+                        <option value="en-US-mike">Mike (US Male)</option>
+                        <option value="en-UK-emma">Emma (UK Female)</option>
+                    </select>
+                    
+                    <button id="submit-btn" onclick="generateAndPlayAudio()">
+                        🔊 Generate & Play Audio
+                    </button>
+                </div>
             </div>
         </div>
         
-        <div id="audio-player" style="margin: 20px 0; display: none;">
-            <h3>🎵 Generated Audio:</h3>
-            <audio id="audio-element" controls style="width: 100%; margin-bottom: 15px;">
+        <!-- Audio Player Section -->
+        <div id="audio-section" style="display: none;">
+            <h4 style="color: #495057;">🎵 Generated Audio</h4>
+            <audio id="audio-player" controls preload="none">
                 Your browser does not support the audio element.
             </audio>
-            
-            <div class="url-container">
-                <span class="url-label">🔗 Audio URL:</span>
-                <a id="audio-link" href="" target="_blank">Click to download or play in new tab</a>
+            <div class="audio-info">
+                <p><strong>Audio URL:</strong></p>
+                <div class="url-display" id="audio-url-display">Generating...</div>
             </div>
+        </div>
+        
+        <!-- Additional Controls -->
+        <div class="additional-controls">
+            <button onclick="checkHealth()">Check API Health</button>
+            <button onclick="getVoiceAgents()">Get Voice Agents Info</button>
         </div>
         
         <div id="response">
