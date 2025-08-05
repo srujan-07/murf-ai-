@@ -1,3 +1,46 @@
+// Day 4: Echo Bot - MediaRecorder API
+let mediaRecorder;
+let recordedChunks = [];
+
+const startBtn = document.getElementById('start-record-btn');
+const stopBtn = document.getElementById('stop-record-btn');
+const echoAudioSection = document.getElementById('echo-audio-section');
+const echoAudioPlayer = document.getElementById('echo-audio-player');
+const echoStatus = document.getElementById('echo-status');
+
+function startRecording() {
+    recordedChunks = [];
+    echoStatus.textContent = 'Requesting microphone access...';
+    navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(stream => {
+            mediaRecorder = new MediaRecorder(stream);
+            mediaRecorder.ondataavailable = e => {
+                if (e.data.size > 0) recordedChunks.push(e.data);
+            };
+            mediaRecorder.onstop = () => {
+                const audioBlob = new Blob(recordedChunks, { type: 'audio/webm' });
+                echoAudioPlayer.src = URL.createObjectURL(audioBlob);
+                echoAudioSection.style.display = 'block';
+                echoStatus.textContent = 'Recording complete. Playback below.';
+            };
+            mediaRecorder.start();
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+            echoStatus.textContent = 'Recording... Speak now!';
+        })
+        .catch(err => {
+            echoStatus.textContent = 'Microphone access denied: ' + err.message;
+        });
+}
+
+function stopRecording() {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+        echoStatus.textContent = 'Processing audio...';
+    }
+}
 // Voice Agents Frontend JavaScript - Day 1
 class VoiceAgentsApp {
     constructor() {

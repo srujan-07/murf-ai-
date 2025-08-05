@@ -232,6 +232,20 @@
                 </div>
             </div>
         </div>
+        <!-- Day 4: Echo Bot Section -->
+        <div id="echo-bot-section" style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 15px; padding: 25px; margin: 25px 0; text-align: left;">
+            <h1 style="font-size: 2em; color: #667eea; margin-bottom: 15px;">Echo Bot</h1>
+            <p style="color: #495057; margin-bottom: 15px;">Record your voice and play it back instantly!</p>
+            <div class="echo-controls" style="display: flex; gap: 15px; margin-bottom: 20px;">
+                <button id="start-record-btn" onclick="startRecording()">🎙️ Start Recording</button>
+                <button id="stop-record-btn" onclick="stopRecording()" disabled>⏹️ Stop Recording</button>
+            </div>
+            <div id="echo-audio-section" style="display: none;">
+                <h4 style="color: #495057;">🔊 Playback</h4>
+                <audio id="echo-audio-player" controls style="width: 100%; height: 50px; margin: 15px 0; border-radius: 8px;"></audio>
+            </div>
+            <div id="echo-status" style="margin-top: 10px; color: #495057;"></div>
+        </div>
         
         <!-- Audio Player Section -->
         <div id="audio-section" style="display: none;">
