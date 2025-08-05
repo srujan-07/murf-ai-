@@ -1,24 +1,6 @@
 # 30 Days of Voice Agents
 
-Welcome to the 30 Days of Voice Agents challenge! This project will build a comprehensive voice-powere## What's Next?
-
-Day 4 will add:
-- Speech recognition (Speech-to-Text)
-- Voice command processing
-- Interactive voice conversations
-- Advanced audio controls
-
-## Technologies Used
-
-- **Backend**: FastAPI, Uvicorn, Murf Python SDK
-- **Frontend**: HTML5, CSS3, JavaScript (ES6+), HTML5 Audio API
-- **TTS Integration**: Murf AI cloud service
-- **Data Validation**: Pydantic models
-- **Audio Playback**: Native HTML5 audio elements
-
----
-
-*Day 3 of 30 - TTS Audio Playback Complete! 🎤🔊🎵* 30 days.
+Welcome to the 30 Days of Voice Agents challenge! This project will build a comprehensive voice-powered application over 30 days.
 
 ## Day 1: Project Setup ✅
 
@@ -28,6 +10,167 @@ Day 4 will add:
 - **Project Structure**: Organized file structure for scalability
 
 ## Day 2: REST TTS Integration ✅
+
+### What we built:
+- **TTS API Endpoint**: `/api/tts/generate` - Accepts text and generates audio URLs
+- **Voice Management**: `/api/tts/voices` - Lists available TTS voices
+- **Murf API Integration**: Real integration with Murf's Python SDK
+- **Input Validation**: Text length limits and error handling
+- **Response Models**: Structured JSON responses with audio URLs
+
+### Features Added in Day 2:
+- ✅ Text-to-Speech API endpoint with real Murf SDK integration
+- ✅ Configurable voice selection (Natalie, Davis, Jane, Mike, Emma)
+- ✅ Speed and pitch control parameters (ready for future use)
+- ✅ Comprehensive input validation and error handling
+- ✅ Real audio generation with Murf's cloud service
+- ✅ Production-ready code with proper error responses
+
+## Day 3: Playing Back TTS Audio ✅
+
+### What we built:
+- **Text Input Interface**: Clean text field for user input with placeholder text
+- **Submit Button**: "Generate & Play Audio" button to trigger TTS generation
+- **HTML Audio Element**: Native `<audio>` controls for playback with auto-play attempt
+- **Audio URL Display**: Shows the generated Murf audio URL for direct access
+- **Voice Selection**: Dropdown to choose from available Murf voices
+- **Real-time Feedback**: Loading states, success messages, and error handling
+
+### Features Added in Day 3:
+- ✅ Clean web interface with text input and submit button
+- ✅ HTML5 audio element for immediate playback
+- ✅ Auto-play functionality (browser permitting)
+- ✅ Real-time status updates and loading indicators
+- ✅ Voice selection dropdown with real Murf voices
+- ✅ URL display for direct audio file access
+- ✅ Keyboard shortcuts and accessibility features
+- ✅ Mobile-responsive design
+
+## Day 4: Echo Bot with Voice Recording ✅
+
+### What we built today:
+- **Echo Bot Section**: New dedicated section for voice recording functionality
+- **Voice Recording**: MediaRecorder API integration for browser-based recording
+- **Recording Controls**: Start/Stop Recording buttons with proper state management
+- **Instant Playback**: Recorded audio plays back immediately using HTML5 audio
+- **Microphone Access**: Permission handling and user feedback for microphone access
+- **Visual Feedback**: Real-time status updates during recording process
+
+### Key Features:
+- ✅ **Voice Recording**: Record audio directly from your microphone
+- ✅ **Start/Stop Controls**: Clean button interface for recording management
+- ✅ **Instant Echo**: Play back your recorded voice immediately
+- ✅ **Microphone Permissions**: Handles browser permission requests gracefully
+- ✅ **Recording Status**: Visual feedback showing recording state
+- ✅ **Audio Storage**: Uses Blob API for temporary audio storage
+- ✅ **Cross-browser Support**: Works with modern browsers supporting MediaRecorder
+- ✅ **Error Handling**: User-friendly messages for microphone access issues
+
+### User Experience Flow:
+1. **Click Start Recording** → Browser requests microphone permission
+2. **Grant Permission** → Recording begins, status shows "Recording... Speak now!"
+3. **Speak into Microphone** → Voice is captured in real-time
+4. **Click Stop Recording** → Recording ends, audio is processed
+5. **Automatic Playback** → HTML audio player appears with your recorded voice
+6. **Listen to Echo** → Play back your voice using standard audio controls
+
+### Technical Implementation:
+- **MediaRecorder API**: Modern browser API for audio recording
+- **Blob Handling**: Efficient audio data management
+- **State Management**: Proper button enable/disable during recording
+- **Audio URL Creation**: Uses `URL.createObjectURL()` for playback
+- **Error Handling**: Comprehensive permission and recording error management
+
+## Project Structure:
+```
+murf/
+├── main.py              # FastAPI backend server with TTS endpoints
+├── requirements.txt     # Python dependencies (murf SDK, FastAPI, uvicorn)
+├── .env.example         # Environment configuration template
+├── static/             # Frontend assets
+│   ├── index.html      # Day 4: TTS + Echo Bot complete interface
+│   └── app.js          # Day 4: TTS + MediaRecorder functionality
+├── test_day3.py        # Day 3: Complete testing suite
+├── test_murf_sdk.py    # Day 2: SDK integration tests
+├── test_tts.py         # Day 2: Legacy test file
+└── README.md           # This file
+```
+
+## Quick Start
+
+### 1. Install Dependencies
+```bash
+pip install -r requirements.txt
+```
+
+### 2. Configure Murf API (Optional)
+```bash
+cp .env.example .env
+# Edit .env and add your Murf API key
+```
+
+### 3. Run the Server
+```bash
+python main.py
+```
+
+### 4. Test the Application
+**Day 4 Interface**: http://localhost:8000
+
+**Text-to-Speech Section:**
+- Enter text in the input field
+- Select a voice from the dropdown
+- Click "Generate & Play Audio"
+- Listen to the generated speech!
+
+**Echo Bot Section:**
+- Click "Start Recording"
+- Allow microphone access when prompted
+- Speak into your microphone
+- Click "Stop Recording"
+- Listen to your voice played back instantly!
+
+**API Documentation**: http://localhost:8000/docs
+
+## API Endpoints
+
+### General Endpoints:
+- `GET /` - Serves the main HTML page
+- `GET /api/health` - Health check endpoint
+- `GET /api/voice-agents` - Voice agents status
+
+### TTS Endpoints:
+- `POST /api/tts/generate` - Generate audio from text
+- `GET /api/tts/voices` - List available voices
+
+### Example TTS Request:
+```json
+{
+  "text": "Hello! This is Day 4 of the Voice Agents challenge!",
+  "voice_id": "en-US-natalie"
+}
+```
+
+## What's Next?
+
+Day 5 will add:
+- Speech-to-Text functionality
+- Voice command recognition
+- Interactive voice conversations
+- Advanced audio processing
+
+## Technologies Used
+
+- **Backend**: FastAPI, Uvicorn, Murf Python SDK
+- **Frontend**: HTML5, CSS3, JavaScript (ES6+), HTML5 Audio API, MediaRecorder API
+- **TTS Integration**: Murf AI cloud service
+- **Voice Recording**: Browser MediaRecorder API
+- **Data Validation**: Pydantic models
+- **Audio Playback**: Native HTML5 audio elements
+
+---
+
+*Day 4 of 30 - Echo Bot Complete! 🎤🔊🎵*
 
 ### What we built:
 - **TTS API Endpoint**: `/api/tts/generate` - Accepts text and generates audio URLs
