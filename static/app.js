@@ -1,4 +1,4 @@
-// Day 4: Echo Bot - MediaRecorder API
+// Day 5: Echo Bot - MediaRecorder API with Upload
 let mediaRecorder;
 let recordedChunks = [];
 
@@ -17,11 +17,16 @@ function startRecording() {
             mediaRecorder.ondataavailable = e => {
                 if (e.data.size > 0) recordedChunks.push(e.data);
             };
-            mediaRecorder.onstop = () => {
+            mediaRecorder.onstop = async () => {
                 const audioBlob = new Blob(recordedChunks, { type: 'audio/webm' });
+                
+                // Show local playback first
                 echoAudioPlayer.src = URL.createObjectURL(audioBlob);
                 echoAudioSection.style.display = 'block';
-                echoStatus.textContent = 'Recording complete. Playback below.';
+                echoStatus.textContent = 'Recording complete. Uploading to server...';
+                
+                // Upload to server
+                await uploadAudioToServer(audioBlob);
             };
             mediaRecorder.start();
             startBtn.disabled = true;
@@ -39,6 +44,38 @@ function stopRecording() {
         startBtn.disabled = false;
         stopBtn.disabled = true;
         echoStatus.textContent = 'Processing audio...';
+    }
+}
+
+// Day 5: Upload recorded audio to server
+async function uploadAudioToServer(audioBlob) {
+    try {
+        const formData = new FormData();
+        formData.append('audio_file', audioBlob, 'echo_recording.webm');
+        
+        echoStatus.textContent = '📤 Uploading audio to server...';
+        
+        const response = await fetch('/api/audio/upload', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            echoStatus.innerHTML = `
+                ✅ Upload successful!<br>
+                📁 File: ${result.filename}<br>
+                📊 Size: ${(result.size_bytes / 1024).toFixed(2)} KB<br>
+                🎵 Type: ${result.content_type}
+            `;
+        } else {
+            echoStatus.textContent = '❌ Upload failed: ' + result.message;
+        }
+        
+    } catch (error) {
+        console.error('Upload error:', error);
+        echoStatus.textContent = '❌ Upload error: ' + error.message;
     }
 }
 // Voice Agents Frontend JavaScript - Day 1
