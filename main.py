@@ -8,9 +8,14 @@ import os
 import shutil
 from typing import Optional
 from pathlib import Path
+import assemblyai as aai
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Create FastAPI instance
-app = FastAPI(title="Voice Agents - Day 5", description="30 Days of Voice Agents Backend with TTS and Audio Upload")
+app = FastAPI(title="Voice Agents - Day 6", description="30 Days of Voice Agents Backend with TTS, Audio Upload, and Transcription")
 
 # Pydantic models for request/response
 class TTSRequest(BaseModel):
@@ -34,8 +39,20 @@ class AudioUploadResponse(BaseModel):
     size_bytes: int
     upload_path: str
 
+# Day 6: Transcription response model
+class TranscriptionResponse(BaseModel):
+    success: bool
+    message: str
+    transcript: Optional[str] = None
+    confidence: Optional[float] = None
+    audio_duration: Optional[float] = None
+
 # Murf API configuration
 MURF_API_KEY = os.getenv("MURF_API_KEY", "ap2_69e1ff6e-6193-4da9-8f71-b7aad1573f38")
+
+# AssemblyAI configuration - you'll need to set your API key
+ASSEMBLY_AI_API_KEY = os.getenv("ASSEMBLY_AI_API_KEY", "YOUR_ASSEMBLY_AI_API_KEY_HERE")
+aai.settings.api_key = ASSEMBLY_AI_API_KEY
 
 # Initialize Murf client
 murf_client = Murf(api_key=MURF_API_KEY)
@@ -198,6 +215,61 @@ async def upload_audio(audio_file: UploadFile = File(...)):
     except Exception as e:
         print(f"Error uploading audio: {e}")
         raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
+
+# Day 6: Audio Transcription Endpoint
+@app.post("/api/transcribe/file", response_model=TranscriptionResponse)
+async def transcribe_audio_file(audio_file: UploadFile = File(...)):
+    """
+    Transcribe audio file using AssemblyAI
+    """
+    try:
+        # Validate file type
+        allowed_types = ["audio/webm", "audio/wav", "audio/mp3", "audio/ogg", "audio/mpeg", "audio/m4a", "audio/mp4"]
+        if audio_file.content_type not in allowed_types:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Invalid file type. Allowed types: {', '.join(allowed_types)}"
+            )
+        
+        # Check if AssemblyAI API key is set
+        if ASSEMBLY_AI_API_KEY == "YOUR_ASSEMBLY_AI_API_KEY_HERE":
+            raise HTTPException(
+                status_code=500,
+                detail="AssemblyAI API key not configured. Please set ASSEMBLY_AI_API_KEY environment variable."
+            )
+        
+        # Read audio file content
+        audio_content = await audio_file.read()
+        
+        # Create AssemblyAI transcriber
+        transcriber = aai.Transcriber()
+        
+        # Transcribe the audio directly from binary data
+        print(f"Starting transcription for file: {audio_file.filename}")
+        transcript = transcriber.transcribe(audio_content)
+        
+        if transcript.status == aai.TranscriptStatus.error:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Transcription failed: {transcript.error}"
+            )
+        
+        # Calculate audio duration if available
+        audio_duration = transcript.audio_duration / 1000 if transcript.audio_duration else None
+        
+        return TranscriptionResponse(
+            success=True,
+            message="Audio transcribed successfully",
+            transcript=transcript.text,
+            confidence=transcript.confidence,
+            audio_duration=audio_duration
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error transcribing audio: {e}")
+        raise HTTPException(status_code=500, detail=f"Transcription failed: {str(e)}")
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

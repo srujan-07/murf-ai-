@@ -3,3 +3,5 @@ uvicorn[standard]==0.32.1
 murf==2.0.2
 pydantic==2.11.7
 python-multipart
+assemblyai
+python-dotenv

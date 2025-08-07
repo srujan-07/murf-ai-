@@ -47,7 +47,7 @@ function stopRecording() {
     }
 }
 
-// Day 5: Upload recorded audio to server
+// Day 6: Upload and transcribe recorded audio
 async function uploadAudioToServer(audioBlob) {
     try {
         const formData = new FormData();
@@ -67,8 +67,13 @@ async function uploadAudioToServer(audioBlob) {
                 ✅ Upload successful!<br>
                 📁 File: ${result.filename}<br>
                 📊 Size: ${(result.size_bytes / 1024).toFixed(2)} KB<br>
-                🎵 Type: ${result.content_type}
+                🎵 Type: ${result.content_type}<br>
+                🎯 Now transcribing...
             `;
+            
+            // Day 6: Also transcribe the audio
+            await transcribeAudio(audioBlob);
+            
         } else {
             echoStatus.textContent = '❌ Upload failed: ' + result.message;
         }
@@ -76,6 +81,43 @@ async function uploadAudioToServer(audioBlob) {
     } catch (error) {
         console.error('Upload error:', error);
         echoStatus.textContent = '❌ Upload error: ' + error.message;
+    }
+}
+
+// Day 6: Transcribe audio using AssemblyAI
+async function transcribeAudio(audioBlob) {
+    try {
+        const formData = new FormData();
+        formData.append('audio_file', audioBlob, 'recording_to_transcribe.webm');
+        
+        echoStatus.textContent = '🎙️ Transcribing audio with AssemblyAI...';
+        
+        const response = await fetch('/api/transcribe/file', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Display transcription result
+            const duration = result.audio_duration ? ` (${result.audio_duration.toFixed(1)}s)` : '';
+            const confidence = result.confidence ? ` • Confidence: ${(result.confidence * 100).toFixed(1)}%` : '';
+            
+            echoStatus.innerHTML = `
+                ✅ Transcription complete!${duration}${confidence}<br>
+                📝 <strong>Transcript:</strong><br>
+                <div style="background: white; border: 1px solid #ccc; border-radius: 5px; padding: 10px; margin: 10px 0; font-style: italic; text-align: left;">
+                    "${result.transcript}"
+                </div>
+            `;
+        } else {
+            echoStatus.innerHTML += '<br>❌ Transcription failed: ' + result.message;
+        }
+        
+    } catch (error) {
+        console.error('Transcription error:', error);
+        echoStatus.innerHTML += '<br>❌ Transcription error: ' + error.message;
     }
 }
 // Voice Agents Frontend JavaScript - Day 1
