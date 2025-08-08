@@ -15,7 +15,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Create FastAPI instance
-app = FastAPI(title="Voice Agents - Day 6", description="30 Days of Voice Agents Backend with TTS, Audio Upload, and Transcription")
+app = FastAPI(title="Voice Agents - Day 7", description="30 Days of Voice Agents Backend with TTS, Audio Upload, Transcription, and Echo Bot v2")
 
 # Pydantic models for request/response
 class TTSRequest(BaseModel):
@@ -46,6 +46,15 @@ class TranscriptionResponse(BaseModel):
     transcript: Optional[str] = None
     confidence: Optional[float] = None
     audio_duration: Optional[float] = None
+
+# Day 7: Echo Bot response model
+class EchoBotResponse(BaseModel):
+    success: bool
+    message: str
+    transcript: Optional[str] = None
+    audio_url: Optional[str] = None
+    voice_used: Optional[str] = None
+    confidence: Optional[float] = None
 
 # Murf API configuration
 MURF_API_KEY = os.getenv("MURF_API_KEY", "ap2_69e1ff6e-6193-4da9-8f71-b7aad1573f38")
@@ -79,8 +88,9 @@ async def get_voice_agents():
     """Sample API endpoint for voice agents"""
     return {
         "project": "30 Days of Voice Agents",
-        "day": 2,
-        "task": "REST TTS Integration",
+        "day": 7,
+        "task": "Echo Bot v2 with TTS",
+        "features": ["TTS", "Audio Upload", "Transcription", "Echo Bot v2"],
         "agents": []
     }
 
@@ -270,6 +280,87 @@ async def transcribe_audio_file(audio_file: UploadFile = File(...)):
     except Exception as e:
         print(f"Error transcribing audio: {e}")
         raise HTTPException(status_code=500, detail=f"Transcription failed: {str(e)}")
+
+# Day 7: Echo Bot with TTS - Transcribe and replay with Murf voice
+@app.post("/api/tts/echo", response_model=EchoBotResponse)
+async def echo_with_tts(audio_file: UploadFile = File(...), voice_id: str = "en-US-natalie"):
+    """
+    Echo Bot v2: Transcribe audio and replay with Murf TTS voice
+    """
+    try:
+        # Validate file type
+        allowed_types = ["audio/webm", "audio/wav", "audio/mp3", "audio/ogg", "audio/mpeg", "audio/m4a", "audio/mp4"]
+        if audio_file.content_type not in allowed_types:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Invalid file type. Allowed types: {', '.join(allowed_types)}"
+            )
+        
+        # Check if API keys are configured
+        if ASSEMBLY_AI_API_KEY == "YOUR_ASSEMBLY_AI_API_KEY_HERE":
+            raise HTTPException(
+                status_code=500,
+                detail="AssemblyAI API key not configured. Please set ASSEMBLY_AI_API_KEY environment variable."
+            )
+        
+        print(f"Starting Echo Bot v2 for file: {audio_file.filename}")
+        
+        # Step 1: Transcribe the audio using AssemblyAI
+        audio_content = await audio_file.read()
+        transcriber = aai.Transcriber()
+        
+        print("Step 1: Transcribing audio with AssemblyAI...")
+        transcript = transcriber.transcribe(audio_content)
+        
+        if transcript.status == aai.TranscriptStatus.error:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Transcription failed: {transcript.error}"
+            )
+        
+        if not transcript.text or transcript.text.strip() == "":
+            raise HTTPException(
+                status_code=400,
+                detail="No speech detected in the audio. Please try speaking more clearly."
+            )
+        
+        print(f"Transcription successful: '{transcript.text}'")
+        
+        # Step 2: Generate TTS audio using Murf
+        print(f"Step 2: Generating TTS with Murf voice '{voice_id}'...")
+        
+        try:
+            murf_response = murf_client.text_to_speech.generate(
+                text=transcript.text,
+                voice_id=voice_id
+            )
+            
+            print(f"Murf TTS Response: {murf_response}")
+            
+            # Extract audio file URL from response
+            audio_url = murf_response.audio_file if hasattr(murf_response, 'audio_file') else str(murf_response)
+            
+            return EchoBotResponse(
+                success=True,
+                message=f"Echo Bot v2 successful! Transcribed and generated with {voice_id} voice.",
+                transcript=transcript.text,
+                audio_url=audio_url,
+                voice_used=voice_id,
+                confidence=transcript.confidence
+            )
+            
+        except Exception as murf_error:
+            print(f"Murf TTS Error: {murf_error}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"TTS generation failed: {str(murf_error)}"
+            )
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error in Echo Bot v2: {e}")
+        raise HTTPException(status_code=500, detail=f"Echo Bot failed: {str(e)}")
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

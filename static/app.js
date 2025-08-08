@@ -23,10 +23,10 @@ function startRecording() {
                 // Show local playback first
                 echoAudioPlayer.src = URL.createObjectURL(audioBlob);
                 echoAudioSection.style.display = 'block';
-                echoStatus.textContent = 'Recording complete. Uploading to server...';
+                echoStatus.textContent = 'Recording complete. Processing with Echo Bot v2...';
                 
-                // Upload to server
-                await uploadAudioToServer(audioBlob);
+                // Day 7: Use new Echo Bot v2 with TTS
+                await echoWithTTS(audioBlob);
             };
             mediaRecorder.start();
             startBtn.disabled = true;
@@ -118,6 +118,60 @@ async function transcribeAudio(audioBlob) {
     } catch (error) {
         console.error('Transcription error:', error);
         echoStatus.innerHTML += '<br>❌ Transcription error: ' + error.message;
+    }
+}
+
+// Day 7: Echo Bot v2 - Transcribe and replay with Murf TTS
+async function echoWithTTS(audioBlob) {
+    try {
+        const formData = new FormData();
+        formData.append('audio_file', audioBlob, 'echo_recording.webm');
+        formData.append('voice_id', 'en-US-natalie'); // You can make this configurable
+        
+        echoStatus.textContent = '🎙️ Step 1: Transcribing your voice...';
+        
+        const response = await fetch('/api/tts/echo', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Update status with transcription
+            echoStatus.textContent = '🔊 Step 2: Generating Murf voice...';
+            
+            // Update the audio player with the new Murf TTS audio
+            echoAudioPlayer.src = result.audio_url;
+            echoAudioPlayer.load(); // Ensure the new audio loads
+            
+            // Display final result with transcript and confidence
+            const confidence = result.confidence ? ` • Confidence: ${(result.confidence * 100).toFixed(1)}%` : '';
+            
+            echoStatus.innerHTML = `
+                ✅ Echo Bot v2 Complete!${confidence}<br>
+                🎤 <strong>What you said:</strong><br>
+                <div style="background: #e3f2fd; border: 1px solid #1976d2; border-radius: 5px; padding: 10px; margin: 10px 0; font-style: italic; color: #1565c0;">
+                    "${result.transcript}"
+                </div>
+                🔊 <strong>Now playing in ${result.voice_used} voice!</strong><br>
+                <small>Click the play button below to hear your voice as ${result.voice_used}</small>
+            `;
+            
+            // Auto-play the new TTS audio (if browser allows)
+            try {
+                await echoAudioPlayer.play();
+            } catch (playError) {
+                console.log('Auto-play prevented by browser:', playError);
+            }
+            
+        } else {
+            echoStatus.textContent = '❌ Echo Bot v2 failed: ' + result.message;
+        }
+        
+    } catch (error) {
+        console.error('Echo Bot v2 error:', error);
+        echoStatus.textContent = '❌ Echo Bot v2 error: ' + error.message;
     }
 }
 // Voice Agents Frontend JavaScript - Day 1
