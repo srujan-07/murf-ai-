@@ -279,32 +279,81 @@ python main.py
 }
 ```
 
+## Day 7: Echo Bot v2 - Complete Voice Pipeline ✅
+
+### What we built:
+- **Enhanced Echo Bot**: Complete voice-to-voice pipeline with transcription and TTS
+- **AssemblyAI Integration**: High-quality speech-to-text transcription
+- **Audio Processing Pipeline**: Record → Upload → Transcribe → Generate TTS → Playback
+- **Improved UI**: Updated interface with "Echo Bot v2 with Murf TTS"
+- **Error Handling**: Comprehensive error handling for the entire voice pipeline
+
+### Features Added in Day 7:
+- ✅ Real-time transcription with AssemblyAI
+- ✅ Voice-to-voice echo functionality (your voice → text → AI voice)
+- ✅ Enhanced Echo Bot interface with proper status messages
+- ✅ Audio file management and cleanup
+- ✅ Production-ready voice pipeline
+- ✅ Configurable TTS voice selection for echo playback
+
+## Day 8: LLM Integration with Google Gemini ✅
+
+### What we built:
+- **Google Gemini API Integration**: Added Google's Gemini 1.5 Flash and Pro models
+- **LLM Query Endpoint**: `/api/llm/query` - Accepts text and returns AI responses
+- **Frontend LLM Interface**: Clean chat-like interface for AI conversations
+- **Model Selection**: Choose between Gemini 1.5 Flash (fast) and Pro (advanced)
+- **Configuration Controls**: Temperature and token limit controls
+- **Test Scripts**: Validation scripts for API functionality
+
+### Features Added in Day 8:
+- ✅ Google Gemini API integration with `google-generativeai` package
+- ✅ RESTful LLM endpoint with proper error handling
+- ✅ Frontend chat interface with textarea and controls
+- ✅ Model selection (gemini-1.5-flash, gemini-1.5-pro)
+- ✅ Temperature and max tokens configuration
+- ✅ Real-time response streaming and display
+- ✅ Comprehensive test suite for LLM functionality
+- ✅ Error handling for API limits and content filtering
+
+---
+
 ## API Endpoints
 
 ### General Endpoints:
 - `GET /` - Serves the main HTML page
-- `GET /api/health` - Health check endpoint
+- `GET /api/health` - Health check endpoint  
 - `GET /api/voice-agents` - Voice agents status
 
-### TTS Endpoints (NEW):
+### TTS Endpoints:
 - `POST /api/tts/generate` - Generate audio from text
 - `GET /api/tts/voices` - List available voices
+- `POST /api/tts/echo` - Echo Bot v2 with transcription and TTS
+
+### Transcription Endpoints:
+- `POST /api/transcribe/file` - Transcribe uploaded audio file
+
+### LLM Endpoints (NEW):
+- `POST /api/llm/query` - Query Google Gemini with text input
 
 ## What's Next?
 
-Day 3 will add:
-- Frontend TTS integration
-- Audio player functionality
-- Voice selection UI
-- Real-time audio generation
+Day 9 will add:
+- Multi-modal capabilities (image + text)
+- Voice-to-LLM pipeline
+- Enhanced conversation memory
+- Advanced prompt engineering
 
 ## Technologies Used
 
-- **Backend**: FastAPI, Uvicorn, HTTPx
+- **Backend**: FastAPI, Uvicorn, Python 3.13+
 - **Frontend**: HTML5, CSS3, JavaScript (ES6+)
-- **TTS Integration**: Murf API (REST)
+- **TTS Integration**: Murf API (Official Python SDK)
+- **Transcription**: AssemblyAI Python SDK
+- **LLM Integration**: Google Gemini API (google-generativeai)
 - **Data Validation**: Pydantic models
+- **Environment Management**: python-dotenv
 
 ---
 
-*Day 2 of 30 - TTS API Integration Complete! �🔊*
+*Day 8 of 30 - LLM Integration Complete! 🤖🧠*
