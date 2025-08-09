@@ -392,3 +392,100 @@ class VoiceUtils {
 
 // Check browser support on load
 VoiceUtils.checkBrowserSupport();
+
+// Day 8: Simple test function
+function testLLM() {
+    alert('Button clicked! Function is working.');
+    const statusDiv = document.getElementById('llm-status');
+    if (statusDiv) {
+        statusDiv.textContent = '🧪 Button clicked - function is working!';
+        statusDiv.style.color = '#28a745';
+    }
+    // Now call the actual function
+    setTimeout(() => queryLLM(), 100);
+}
+
+// Day 8: LLM Query Function with Google Gemini
+async function queryLLM() {
+    console.log('🧪 queryLLM function called');
+    
+    const inputText = document.getElementById('llm-input').value.trim();
+    const statusDiv = document.getElementById('llm-status');
+    const responseDiv = document.getElementById('llm-response');
+    const responseTextDiv = document.getElementById('llm-response-text');
+
+    // Basic validation
+    if (!inputText) {
+        if (statusDiv) {
+            statusDiv.textContent = '❌ Please enter your question or prompt';
+            statusDiv.style.color = '#dc3545';
+        }
+        return;
+    }
+
+    // Show loading state
+    if (statusDiv) {
+        statusDiv.textContent = '🚀 Querying Gemini... Please wait.';
+        statusDiv.style.color = '#667eea';
+    }
+
+    try {
+        const response = await fetch('/api/llm/query', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                text: inputText,
+                model: 'gemini-1.5-flash',
+                temperature: 0.7,
+                max_tokens: 500
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+
+        // Display response
+        if (responseTextDiv) {
+            responseTextDiv.textContent = data.response;
+        }
+        
+        if (responseDiv) {
+            responseDiv.style.display = 'block';
+        }
+        
+        if (statusDiv) {
+            statusDiv.textContent = '✅ Response generated successfully!';
+            statusDiv.style.color = '#28a745';
+        }
+
+        console.log('LLM Response:', data);
+
+    } catch (error) {
+        console.error('LLM Query Error:', error);
+        if (statusDiv) {
+            statusDiv.textContent = `❌ Error: ${error.message}`;
+            statusDiv.style.color = '#dc3545';
+        }
+        if (responseDiv) {
+            responseDiv.style.display = 'none';
+        }
+    }
+}
+
+// Add Enter key support for LLM input
+document.addEventListener('DOMContentLoaded', () => {
+    const llmInput = document.getElementById('llm-input');
+    if (llmInput) {
+        llmInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                e.preventDefault();
+                queryLLM();
+            }
+        });
+    }
+});

@@ -5,3 +5,4 @@ pydantic==2.11.7
 python-multipart
 assemblyai
 python-dotenv
+google-generativeai
