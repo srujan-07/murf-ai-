@@ -489,3 +489,146 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+// Day 9: Voice-to-Voice AI Functions
+let voiceAIRecorder;
+let voiceAIChunks = [];
+
+function startVoiceAI() {
+    voiceAIChunks = [];
+    const startBtn = document.getElementById('start-voice-ai-btn');
+    const stopBtn = document.getElementById('stop-voice-ai-btn');
+    const statusDiv = document.getElementById('voice-ai-status');
+    const responseSection = document.getElementById('voice-ai-response-section');
+    
+    // Hide previous response
+    responseSection.style.display = 'none';
+    
+    statusDiv.textContent = '🎤 Requesting microphone access...';
+    statusDiv.style.color = '#d68910';
+    
+    navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(stream => {
+            voiceAIRecorder = new MediaRecorder(stream);
+            
+            voiceAIRecorder.ondataavailable = e => {
+                if (e.data.size > 0) voiceAIChunks.push(e.data);
+            };
+            
+            voiceAIRecorder.onstop = async () => {
+                const audioBlob = new Blob(voiceAIChunks, { type: 'audio/webm' });
+                
+                statusDiv.textContent = '🧠 Processing your voice with AI...';
+                statusDiv.style.color = '#667eea';
+                
+                await processVoiceWithAI(audioBlob);
+            };
+            
+            voiceAIRecorder.start();
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+            statusDiv.textContent = '🎙️ Recording... Ask your question now!';
+            statusDiv.style.color = '#dc3545';
+        })
+        .catch(err => {
+            statusDiv.textContent = '❌ Microphone access denied: ' + err.message;
+            statusDiv.style.color = '#dc3545';
+        });
+}
+
+function stopVoiceAI() {
+    const startBtn = document.getElementById('start-voice-ai-btn');
+    const stopBtn = document.getElementById('stop-voice-ai-btn');
+    
+    if (voiceAIRecorder && voiceAIRecorder.state !== 'inactive') {
+        voiceAIRecorder.stop();
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+        
+        // Stop all tracks to free up microphone
+        if (voiceAIRecorder.stream) {
+            voiceAIRecorder.stream.getTracks().forEach(track => track.stop());
+        }
+    }
+}
+
+async function processVoiceWithAI(audioBlob) {
+    const statusDiv = document.getElementById('voice-ai-status');
+    const responseSection = document.getElementById('voice-ai-response-section');
+    const audioPlayer = document.getElementById('voice-ai-audio-player');
+    const transcribedText = document.getElementById('transcribed-question');
+    const aiResponseText = document.getElementById('ai-response-text');
+    const processingTime = document.getElementById('processing-time');
+    const voiceSelector = document.getElementById('ai-voice-selector');
+    const modelSelector = document.getElementById('ai-model-selector');
+    
+    try {
+        // Prepare form data
+        const formData = new FormData();
+        formData.append('audio_file', audioBlob, 'voice_query.webm');
+        formData.append('voice', voiceSelector.value);
+        formData.append('model', modelSelector.value);
+        formData.append('temperature', '0.7');
+        
+        statusDiv.textContent = '🚀 AI Pipeline: Transcribe → Think → Speak...';
+        statusDiv.style.color = '#667eea';
+        
+        const startTime = Date.now();
+        
+        // Send to voice-to-voice AI endpoint
+        const response = await fetch('/api/llm/query/audio', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const endTime = Date.now();
+        const totalTime = ((endTime - startTime) / 1000).toFixed(2);
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.detail || `HTTP ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        // Display results
+        transcribedText.textContent = data.transcribed_text || 'No transcription';
+        aiResponseText.textContent = data.llm_response ? 
+            (data.llm_response.length > 200 ? data.llm_response.substring(0, 200) + '...' : data.llm_response) 
+            : 'No response';
+        processingTime.textContent = `${totalTime}s (Server: ${data.processing_time}s)`;
+        
+        // Load and play AI response audio
+        if (data.audio_url) {
+            audioPlayer.src = data.audio_url;
+            responseSection.style.display = 'block';
+            
+            // Auto-play if possible
+            try {
+                await audioPlayer.play();
+                statusDiv.textContent = '✅ AI responded! Playing audio response.';
+                statusDiv.style.color = '#28a745';
+            } catch (playError) {
+                statusDiv.textContent = '✅ AI responded! Click play button to hear response.';
+                statusDiv.style.color = '#28a745';
+            }
+        } else {
+            statusDiv.textContent = '⚠️ AI responded but no audio generated.';
+            statusDiv.style.color = '#ffc107';
+            responseSection.style.display = 'block';
+        }
+        
+        console.log('Voice AI Response:', data);
+        
+    } catch (error) {
+        console.error('Voice AI Error:', error);
+        statusDiv.textContent = `❌ Error: ${error.message}`;
+        statusDiv.style.color = '#dc3545';
+        
+        // Show error details in response section
+        transcribedText.textContent = 'Error occurred';
+        aiResponseText.textContent = error.message;
+        processingTime.textContent = 'Failed';
+        responseSection.style.display = 'block';
+    }
+}
