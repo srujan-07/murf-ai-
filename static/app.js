@@ -830,6 +830,10 @@ async function processChatMessage(audioBlob) {
         
         const data = await response.json();
         
+        // Check if the response indicates service failures
+        const hasErrors = !data.success;
+        const isAudioAvailable = data.audio_url && data.audio_url !== null;
+        
         // Update UI with results
         processingTime.textContent = `${totalTime}s (Server: ${data.processing_time}s)`;
         messageCount.textContent = `${data.message_count} messages`;
@@ -839,36 +843,44 @@ async function processChatMessage(audioBlob) {
         const conversationDiv = document.getElementById('conversation-messages');
         const userTime = new Date().toLocaleTimeString();
         
-        // Add user message
+        // Add user message with error indication if needed
         const userMsg = `
-            <div style="margin-bottom: 10px; padding: 10px; background: #e3f2fd; border-radius: 8px;">
+            <div style="margin-bottom: 10px; padding: 10px; background: ${hasErrors && data.transcribed_text.includes('technical issue') ? '#fff3cd' : '#e3f2fd'}; border-radius: 8px;">
                 <div style="font-weight: bold; color: #333;">🗣️ You <span style="font-size: 12px; color: #666;">(${userTime})</span></div>
                 <div style="margin-top: 5px; color: #555;">${data.transcribed_text}</div>
+                ${hasErrors && data.transcribed_text.includes('technical issue') ? '<div style="font-size: 12px; color: #856404; margin-top: 5px;">⚠️ Speech recognition had issues</div>' : ''}
             </div>
         `;
         
-        // Add AI response
+        // Add AI response with error indication if needed
         const aiTime = new Date().toLocaleTimeString();
         const aiMsg = `
-            <div style="margin-bottom: 10px; padding: 10px; background: #f3e5f5; border-radius: 8px;">
+            <div style="margin-bottom: 10px; padding: 10px; background: ${hasErrors ? '#f8d7da' : '#f3e5f5'}; border-radius: 8px;">
                 <div style="font-weight: bold; color: #333;">🤖 AI <span style="font-size: 12px; color: #666;">(${aiTime})</span></div>
                 <div style="margin-top: 5px; color: #555;">${data.llm_response}</div>
+                ${hasErrors ? '<div style="font-size: 12px; color: #721c24; margin-top: 5px;">⚠️ Service issues detected</div>' : ''}
+                ${!isAudioAvailable ? '<div style="font-size: 12px; color: #856404; margin-top: 5px;">🔇 Audio generation unavailable</div>' : ''}
             </div>
         `;
         
         conversationDiv.innerHTML += userMsg + aiMsg;
         conversationDiv.scrollTop = conversationDiv.scrollHeight; // Scroll to bottom
         
-        // Load and play AI response audio
-        if (data.audio_url) {
+        // Handle audio response with fallback
+        if (isAudioAvailable) {
             audioPlayer.src = data.audio_url;
             responseSection.style.display = 'block';
             
             // Auto-play if possible
             try {
                 await audioPlayer.play();
-                statusDiv.textContent = '✅ AI responded! Playing audio response.';
-                statusDiv.style.color = '#28a745';
+                if (hasErrors) {
+                    statusDiv.textContent = '⚠️ AI responded with service issues. Audio available.';
+                    statusDiv.style.color = '#ffc107';
+                } else {
+                    statusDiv.textContent = '✅ AI responded! Playing audio response.';
+                    statusDiv.style.color = '#28a745';
+                }
                 
                 // Auto-continue conversation if enabled
                 if (autoContinue.checked) {
@@ -876,30 +888,96 @@ async function processChatMessage(audioBlob) {
                         setTimeout(() => {
                             statusDiv.textContent = '🎙️ Ready for your next message. Click start talking!';
                             statusDiv.style.color = '#28a745';
-                            // Could auto-start recording here, but better UX to let user click
                         }, 1000);
                     }, { once: true });
                 }
                 
             } catch (playError) {
-                statusDiv.textContent = '✅ AI responded! Click play button to hear response.';
-                statusDiv.style.color = '#28a745';
+                if (hasErrors) {
+                    statusDiv.textContent = '⚠️ AI responded with issues. Click play for audio.';
+                    statusDiv.style.color = '#ffc107';
+                } else {
+                    statusDiv.textContent = '✅ AI responded! Click play button to hear response.';
+                    statusDiv.style.color = '#28a745';
+                }
             }
         } else {
-            statusDiv.textContent = '⚠️ AI responded but no audio generated.';
-            statusDiv.style.color = '#ffc107';
+            // No audio available - show text-only response
             responseSection.style.display = 'block';
+            audioPlayer.style.display = 'none';
+            
+            if (hasErrors) {
+                statusDiv.textContent = '⚠️ AI responded (text only) - voice services unavailable.';
+                statusDiv.style.color = '#ffc107';
+            } else {
+                statusDiv.textContent = '⚠️ AI responded but no audio generated.';
+                statusDiv.style.color = '#ffc107';
+            }
+            
+            // Show a fallback "Read text" button
+            if (!document.getElementById('fallback-tts-btn')) {
+                const fallbackBtn = document.createElement('button');
+                fallbackBtn.id = 'fallback-tts-btn';
+                fallbackBtn.textContent = '🔊 Read Text Aloud (Browser TTS)';
+                fallbackBtn.style.cssText = 'margin: 10px 0; padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;';
+                fallbackBtn.onclick = () => {
+                    // Use browser's built-in speech synthesis as fallback
+                    if ('speechSynthesis' in window) {
+                        const utterance = new SpeechSynthesisUtterance(data.llm_response);
+                        utterance.rate = 0.9;
+                        utterance.pitch = 1;
+                        window.speechSynthesis.speak(utterance);
+                        statusDiv.textContent = '🔊 Using browser speech synthesis...';
+                        statusDiv.style.color = '#17a2b8';
+                    } else {
+                        statusDiv.textContent = '❌ No speech synthesis available.';
+                        statusDiv.style.color = '#dc3545';
+                    }
+                };
+                responseSection.appendChild(fallbackBtn);
+            }
         }
         
         console.log('Chat Response:', data);
         
     } catch (error) {
         console.error('Chat Error:', error);
-        statusDiv.textContent = `❌ Error: ${error.message}`;
-        statusDiv.style.color = '#dc3545';
+        
+        // Enhanced error handling with specific messages
+        let errorMessage = '';
+        let errorColor = '#dc3545';
+        
+        if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+            errorMessage = '🌐 Network connection issue. Please check your internet and try again.';
+        } else if (error.message.includes('timeout') || error.message.includes('TimeoutError')) {
+            errorMessage = '⏱️ Request timed out. The server might be busy. Please try again.';
+        } else if (error.message.includes('500')) {
+            errorMessage = '🔧 Server is experiencing technical difficulties. Please try again in a moment.';
+        } else if (error.message.includes('400')) {
+            errorMessage = '📝 There was an issue with your request. Please try recording again.';
+        } else {
+            errorMessage = `❌ Unexpected error: ${error.message}`;
+        }
+        
+        statusDiv.textContent = errorMessage;
+        statusDiv.style.color = errorColor;
+        
+        // Add error message to conversation
+        const conversationDiv = document.getElementById('conversation-messages');
+        const errorTime = new Date().toLocaleTimeString();
+        const errorMsg = `
+            <div style="margin-bottom: 10px; padding: 10px; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 8px;">
+                <div style="font-weight: bold; color: #721c24;">⚠️ System Error <span style="font-size: 12px; color: #666;">(${errorTime})</span></div>
+                <div style="margin-top: 5px; color: #721c24;">${errorMessage}</div>
+                <div style="margin-top: 5px; font-size: 12px; color: #856404;">Please try again or contact support if the issue persists.</div>
+            </div>
+        `;
+        conversationDiv.innerHTML += errorMsg;
+        conversationDiv.scrollTop = conversationDiv.scrollHeight;
         
         processingTime.textContent = 'Failed';
         responseSection.style.display = 'block';
+        audioPlayer.style.display = 'none';
     }
 }
 

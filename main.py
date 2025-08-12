@@ -154,6 +154,86 @@ async def health_check():
     """Simple health check endpoint"""
     return {"status": "healthy", "message": "Voice Agents Backend is running!"}
 
+# Day 11: Enhanced API Health Check with Service Monitoring
+@app.get("/api/health/detailed")
+async def detailed_health_check():
+    """Detailed health check that monitors all API services"""
+    health_status = {
+        "overall_status": "healthy",
+        "timestamp": time.time(),
+        "services": {
+            "assembly_ai": {"status": "unknown", "message": ""},
+            "gemini_llm": {"status": "unknown", "message": ""},
+            "murf_tts": {"status": "unknown", "message": ""}
+        }
+    }
+    
+    # Check AssemblyAI
+    try:
+        if ASSEMBLY_AI_API_KEY == "YOUR_ASSEMBLY_AI_API_KEY_HERE":
+            health_status["services"]["assembly_ai"] = {
+                "status": "error",
+                "message": "API key not configured"
+            }
+        else:
+            health_status["services"]["assembly_ai"] = {
+                "status": "configured",
+                "message": "API key configured"
+            }
+    except Exception as e:
+        health_status["services"]["assembly_ai"] = {
+            "status": "error",
+            "message": str(e)
+        }
+    
+    # Check Gemini
+    try:
+        if GEMINI_API_KEY == "YOUR_GEMINI_API_KEY_HERE":
+            health_status["services"]["gemini_llm"] = {
+                "status": "error",
+                "message": "API key not configured"
+            }
+        else:
+            health_status["services"]["gemini_llm"] = {
+                "status": "configured",
+                "message": "API key configured"
+            }
+    except Exception as e:
+        health_status["services"]["gemini_llm"] = {
+            "status": "error",
+            "message": str(e)
+        }
+    
+    # Check Murf
+    try:
+        if MURF_API_KEY == "YOUR_MURF_API_KEY_HERE":
+            health_status["services"]["murf_tts"] = {
+                "status": "error",
+                "message": "API key not configured"
+            }
+        else:
+            health_status["services"]["murf_tts"] = {
+                "status": "configured",
+                "message": "API key configured"
+            }
+    except Exception as e:
+        health_status["services"]["murf_tts"] = {
+            "status": "error",
+            "message": str(e)
+        }
+    
+    # Determine overall status
+    error_count = sum(1 for service in health_status["services"].values() if service["status"] == "error")
+    
+    if error_count == 0:
+        health_status["overall_status"] = "healthy"
+    elif error_count < 3:
+        health_status["overall_status"] = "degraded"
+    else:
+        health_status["overall_status"] = "critical"
+    
+    return health_status
+
 @app.get("/api/voice-agents")
 async def get_voice_agents():
     """Sample API endpoint for voice agents"""
@@ -722,6 +802,11 @@ async def chat_with_agent(
     7. Return audio URL for playback
     """
     start_time = time.time()
+    transcribed_text = None
+    llm_response_text = None
+    audio_url = None
+    error_occurred = False
+    error_step = None
     
     try:
         # Step 1: Validate audio file and session ID
@@ -743,99 +828,120 @@ async def chat_with_agent(
         
         print(f"Step 1: Audio file saved for session {session_id}: {audio_filename}")
         
-        # Step 2: Transcribe audio with AssemblyAI
-        print("Step 2: Transcribing audio with AssemblyAI...")
+        # Step 2: Transcribe audio with AssemblyAI (with error handling)
+        try:
+            print("Step 2: Transcribing audio with AssemblyAI...")
+            
+            # Check AssemblyAI API key
+            if ASSEMBLY_AI_API_KEY == "YOUR_ASSEMBLY_AI_API_KEY_HERE":
+                raise ValueError("AssemblyAI API key not configured")
+            
+            transcriber = aai.Transcriber()
+            transcript = transcriber.transcribe(str(audio_path))
+            
+            if transcript.status == aai.TranscriptStatus.error:
+                raise ValueError(f"Transcription failed: {transcript.error}")
+            
+            transcribed_text = transcript.text
+            if not transcribed_text or len(transcribed_text.strip()) == 0:
+                raise ValueError("No speech detected in audio file")
+            
+            print(f"Step 2 Complete: Transcribed text: '{transcribed_text[:100]}...'")
+            
+        except Exception as e:
+            error_step = "transcription"
+            error_occurred = True
+            print(f"❌ Transcription Error: {e}")
+            
+            # Fallback: Use a default message for transcription failures
+            transcribed_text = "Sorry, I couldn't understand what you said due to a technical issue."
+            
+            # Add fallback message to session
+            add_message_to_session(session_id, "user", transcribed_text)
         
-        # Check AssemblyAI API key
-        if ASSEMBLY_AI_API_KEY == "YOUR_ASSEMBLY_AI_API_KEY_HERE":
-            raise HTTPException(
-                status_code=500,
-                detail="AssemblyAI API key not configured"
-            )
-        
-        transcriber = aai.Transcriber()
-        transcript = transcriber.transcribe(str(audio_path))
-        
-        if transcript.status == aai.TranscriptStatus.error:
-            raise HTTPException(
-                status_code=500,
-                detail=f"Transcription failed: {transcript.error}"
-            )
-        
-        transcribed_text = transcript.text
-        if not transcribed_text or len(transcribed_text.strip()) == 0:
-            raise HTTPException(
-                status_code=400,
-                detail="No speech detected in audio file"
-            )
-        
-        print(f"Step 2 Complete: Transcribed text: '{transcribed_text[:100]}...'")
-        
-        # Step 3: Add user message to chat history
-        add_message_to_session(session_id, "user", transcribed_text)
+        # Step 3: Add user message to chat history (if transcription succeeded)
+        if not error_occurred:
+            add_message_to_session(session_id, "user", transcribed_text)
         
         # Step 4: Build conversation context with chat history
         conversation_context = build_conversation_context(session_id)
         print(f"Step 3: Built conversation context with {len(get_or_create_chat_session(session_id).messages)} messages")
         
-        # Step 5: Query Gemini LLM with conversation context
-        print("Step 4: Querying Gemini LLM with conversation context...")
-        
-        # Check Gemini API key
-        if GEMINI_API_KEY == "YOUR_GEMINI_API_KEY_HERE":
-            raise HTTPException(
-                status_code=500,
-                detail="Gemini API key not configured"
-            )
-        
-        # Create prompt with conversation context
-        if conversation_context:
-            llm_prompt = f"""{conversation_context}User: {transcribed_text}
+        # Step 5: Query Gemini LLM with conversation context (with error handling)
+        try:
+            print("Step 4: Querying Gemini LLM with conversation context...")
+            
+            # Check Gemini API key
+            if GEMINI_API_KEY == "YOUR_GEMINI_API_KEY_HERE":
+                raise ValueError("Gemini API key not configured")
+            
+            # Create prompt with conversation context
+            if error_occurred and error_step == "transcription":
+                # Special prompt for transcription failures
+                llm_prompt = """I'm having trouble hearing what the user said due to a technical issue with speech recognition. Please provide a helpful apology and offer to try again, keeping the response under 2000 characters for voice synthesis."""
+            elif conversation_context:
+                llm_prompt = f"""{conversation_context}User: {transcribed_text}
 
 Please provide a helpful and conversational response that takes into account the previous conversation history. Keep responses concise for voice synthesis (max 2000 characters)."""
-        else:
-            llm_prompt = f"""Please provide a helpful and conversational response to this message (max 2000 characters for voice synthesis): {transcribed_text}"""
-        
-        gemini_model = genai.GenerativeModel(model)
-        llm_response = gemini_model.generate_content(llm_prompt)
-        
-        if not llm_response.text:
-            raise HTTPException(
-                status_code=500,
-                detail="No response generated by Gemini"
-            )
-        
-        llm_text = llm_response.text.strip()
-        print(f"Step 4 Complete: LLM response: '{llm_text[:100]}...' ({len(llm_text)} chars)")
+            else:
+                llm_prompt = f"""Please provide a helpful and conversational response to this message (max 2000 characters for voice synthesis): {transcribed_text}"""
+            
+            gemini_model = genai.GenerativeModel(model)
+            llm_response = gemini_model.generate_content(llm_prompt)
+            
+            if not llm_response.text:
+                raise ValueError("No response generated by Gemini")
+            
+            llm_response_text = llm_response.text.strip()
+            print(f"Step 4 Complete: LLM response: '{llm_response_text[:100]}...' ({len(llm_response_text)} chars)")
+            
+        except Exception as e:
+            if not error_occurred:
+                error_step = "llm"
+            error_occurred = True
+            print(f"❌ LLM Error: {e}")
+            
+            # Fallback response for LLM failures
+            if error_step == "transcription":
+                llm_response_text = "I'm having trouble connecting to my speech recognition service right now. Could you please try speaking again in a moment?"
+            else:
+                llm_response_text = "I'm having trouble processing your request right now due to a technical issue. Please try again in a moment."
         
         # Step 6: Add AI response to chat history
-        add_message_to_session(session_id, "assistant", llm_text)
+        add_message_to_session(session_id, "assistant", llm_response_text)
         
         # Step 7: Handle long responses (Murf 3000 char limit)
-        if len(llm_text) > 3000:
-            print(f"Response too long ({len(llm_text)} chars), truncating to 2800 chars...")
-            llm_text = llm_text[:2800] + "..."
+        if len(llm_response_text) > 3000:
+            print(f"Response too long ({len(llm_response_text)} chars), truncating to 2800 chars...")
+            llm_response_text = llm_response_text[:2800] + "..."
         
-        # Step 8: Generate audio with Murf TTS
-        print("Step 5: Generating audio with Murf TTS...")
-        
-        # Check Murf API key
-        if MURF_API_KEY == "YOUR_MURF_API_KEY_HERE":
-            raise HTTPException(
-                status_code=500,
-                detail="Murf API key not configured"
+        # Step 8: Generate audio with Murf TTS (with error handling)
+        try:
+            print("Step 5: Generating audio with Murf TTS...")
+            
+            # Check Murf API key
+            if MURF_API_KEY == "YOUR_MURF_API_KEY_HERE":
+                raise ValueError("Murf API key not configured")
+            
+            # Generate audio with Murf
+            tts_response = murf_client.text_to_speech.generate(
+                voice_id=voice,
+                text=llm_response_text
             )
-        
-        # Generate audio with Murf
-        tts_response = murf_client.text_to_speech.generate(
-            voice_id=voice,
-            text=llm_text
-        )
-        
-        print(f"Murf TTS Response: {tts_response}")
-        
-        # Extract audio file URL from response
-        audio_url = tts_response.audio_file if hasattr(tts_response, 'audio_file') else str(tts_response)
+            
+            print(f"Murf TTS Response: {tts_response}")
+            
+            # Extract audio file URL from response
+            audio_url = tts_response.audio_file if hasattr(tts_response, 'audio_file') else str(tts_response)
+            
+        except Exception as e:
+            if not error_occurred:
+                error_step = "tts"
+            error_occurred = True
+            print(f"❌ TTS Error: {e}")
+            
+            # For TTS failures, we still return the text but no audio
+            audio_url = None
         
         # Cleanup: Remove uploaded audio file
         try:
@@ -846,12 +952,20 @@ Please provide a helpful and conversational response that takes into account the
         processing_time = time.time() - start_time
         message_count = len(get_or_create_chat_session(session_id).messages)
         
+        # Determine success status and message
+        if error_occurred:
+            success_message = f"Chat response completed with {error_step} service issues"
+            if not audio_url:
+                success_message += " (text response only)"
+        else:
+            success_message = f"Chat response successful for session {session_id}"
+        
         return ChatResponse(
-            success=True,
-            message=f"Chat response successful for session {session_id}",
+            success=not error_occurred,  # False if any errors occurred
+            message=success_message,
             session_id=session_id,
             transcribed_text=transcribed_text,
-            llm_response=llm_text,
+            llm_response=llm_response_text,
             audio_url=audio_url,
             model_used=model,
             voice_used=voice,
@@ -875,9 +989,19 @@ Please provide a helpful and conversational response that takes into account the
         except:
             pass
         print(f"Error in chat agent pipeline: {e}")
-        raise HTTPException(
-            status_code=500, 
-            detail=f"Chat agent pipeline failed: {str(e)}"
+        
+        # Return fallback response for critical errors
+        return ChatResponse(
+            success=False,
+            message="Critical system error occurred",
+            session_id=session_id,
+            transcribed_text="System error",
+            llm_response="I'm experiencing technical difficulties right now. Please try again in a few minutes.",
+            audio_url=None,
+            model_used=model,
+            voice_used=voice,
+            processing_time=round(time.time() - start_time, 2),
+            message_count=0
         )
 
 # Day 10: Get Chat History Endpoint
