@@ -632,3 +632,278 @@ async function processVoiceWithAI(audioBlob) {
         responseSection.style.display = 'block';
     }
 }
+
+// Day 10: Chat Agent with Session Management
+let chatMediaRecorder = null;
+let chatAudioChunks = [];
+let currentSessionId = null;
+
+// Get or generate session ID from URL params
+function initializeSession() {
+    const urlParams = new URLSearchParams(window.location.search);
+    let sessionId = urlParams.get('session_id');
+    
+    if (!sessionId) {
+        sessionId = generateSessionId();
+        // Update URL with session ID
+        urlParams.set('session_id', sessionId);
+        const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+        window.history.replaceState({}, '', newUrl);
+    }
+    
+    currentSessionId = sessionId;
+    document.getElementById('session-id-input').value = sessionId;
+    document.getElementById('current-session-display').textContent = sessionId;
+    
+    // Load existing chat history
+    loadChatHistory();
+}
+
+function generateSessionId() {
+    const timestamp = Date.now();
+    const random = Math.floor(Math.random() * 1000);
+    return `chat_${timestamp}_${random}`;
+}
+
+function updateSessionId() {
+    const inputSessionId = document.getElementById('session-id-input').value.trim();
+    if (inputSessionId && inputSessionId !== currentSessionId) {
+        currentSessionId = inputSessionId;
+        
+        // Update URL
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.set('session_id', currentSessionId);
+        const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+        window.history.replaceState({}, '', newUrl);
+        
+        document.getElementById('current-session-display').textContent = currentSessionId;
+        loadChatHistory();
+    }
+}
+
+function clearSession() {
+    if (confirm('Clear chat history for this session? This cannot be undone.')) {
+        document.getElementById('conversation-messages').innerHTML = 
+            '<div style="color: #6c757d; font-style: italic;">Chat history cleared. Start a new conversation...</div>';
+        document.getElementById('message-count-display').textContent = '0';
+    }
+}
+
+async function loadChatHistory() {
+    try {
+        const response = await fetch(`/api/agent/chat/${currentSessionId}/history`);
+        
+        if (response.ok) {
+            const data = await response.json();
+            displayChatHistory(data.messages);
+            document.getElementById('message-count-display').textContent = data.message_count || 0;
+        }
+    } catch (error) {
+        console.error('Failed to load chat history:', error);
+    }
+}
+
+function displayChatHistory(messages) {
+    const conversationDiv = document.getElementById('conversation-messages');
+    
+    if (!messages || messages.length === 0) {
+        conversationDiv.innerHTML = '<div style="color: #6c757d; font-style: italic;">No messages yet. Start the conversation!</div>';
+        return;
+    }
+    
+    let html = '';
+    messages.forEach((msg, index) => {
+        const isUser = msg.role === 'user';
+        const bgColor = isUser ? '#e3f2fd' : '#f3e5f5';
+        const icon = isUser ? '🗣️' : '🤖';
+        const time = new Date(msg.timestamp * 1000).toLocaleTimeString();
+        
+        html += `
+            <div style="margin-bottom: 10px; padding: 10px; background: ${bgColor}; border-radius: 8px;">
+                <div style="font-weight: bold; color: #333;">${icon} ${isUser ? 'You' : 'AI'} <span style="font-size: 12px; color: #666;">(${time})</span></div>
+                <div style="margin-top: 5px; color: #555;">${msg.content}</div>
+            </div>
+        `;
+    });
+    
+    conversationDiv.innerHTML = html;
+    conversationDiv.scrollTop = conversationDiv.scrollHeight; // Scroll to bottom
+}
+
+function startChatRecording() {
+    const startBtn = document.getElementById('start-chat-btn');
+    const stopBtn = document.getElementById('stop-chat-btn');
+    const statusDiv = document.getElementById('chat-status');
+    
+    // Update session if input changed
+    updateSessionId();
+    
+    if (!currentSessionId) {
+        statusDiv.textContent = '❌ Please enter a session ID';
+        statusDiv.style.color = '#dc3545';
+        return;
+    }
+    
+    navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(stream => {
+            chatMediaRecorder = new MediaRecorder(stream);
+            chatAudioChunks = [];
+            
+            chatMediaRecorder.ondataavailable = event => {
+                if (event.data.size > 0) {
+                    chatAudioChunks.push(event.data);
+                }
+            };
+            
+            chatMediaRecorder.onstop = async () => {
+                const audioBlob = new Blob(chatAudioChunks, { type: 'audio/webm' });
+                await processChatMessage(audioBlob);
+            };
+            
+            chatMediaRecorder.start();
+            
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+            statusDiv.textContent = '🎙️ Recording... Click "Stop & Send" when finished.';
+            statusDiv.style.color = '#28a745';
+            
+        })
+        .catch(error => {
+            console.error('Microphone access error:', error);
+            statusDiv.textContent = '❌ Microphone access denied. Please enable microphone.';
+            statusDiv.style.color = '#dc3545';
+        });
+}
+
+function stopChatRecording() {
+    const startBtn = document.getElementById('start-chat-btn');
+    const stopBtn = document.getElementById('stop-chat-btn');
+    const statusDiv = document.getElementById('chat-status');
+    
+    if (chatMediaRecorder && chatMediaRecorder.state !== 'inactive') {
+        chatMediaRecorder.stop();
+        chatMediaRecorder.stream.getTracks().forEach(track => track.stop());
+        
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+        statusDiv.textContent = '⏳ Processing your message...';
+        statusDiv.style.color = '#667eea';
+    }
+}
+
+async function processChatMessage(audioBlob) {
+    const statusDiv = document.getElementById('chat-status');
+    const responseSection = document.getElementById('chat-response-section');
+    const audioPlayer = document.getElementById('chat-audio-player');
+    const processingTime = document.getElementById('chat-processing-time');
+    const messageCount = document.getElementById('session-message-count');
+    const voiceSelector = document.getElementById('chat-voice-selector');
+    const modelSelector = document.getElementById('chat-model-selector');
+    const autoContinue = document.getElementById('auto-continue-chat');
+    
+    try {
+        // Prepare form data
+        const formData = new FormData();
+        formData.append('audio_file', audioBlob, 'chat_message.webm');
+        formData.append('voice', voiceSelector.value);
+        formData.append('model', modelSelector.value);
+        formData.append('temperature', '0.7');
+        
+        statusDiv.textContent = '🚀 Chat Pipeline: Transcribe → Context → Think → Speak...';
+        statusDiv.style.color = '#667eea';
+        
+        const startTime = Date.now();
+        
+        // Send to chat agent endpoint
+        const response = await fetch(`/api/agent/chat/${currentSessionId}`, {
+            method: 'POST',
+            body: formData
+        });
+        
+        const endTime = Date.now();
+        const totalTime = ((endTime - startTime) / 1000).toFixed(2);
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.detail || `HTTP ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        // Update UI with results
+        processingTime.textContent = `${totalTime}s (Server: ${data.processing_time}s)`;
+        messageCount.textContent = `${data.message_count} messages`;
+        document.getElementById('message-count-display').textContent = data.message_count;
+        
+        // Add messages to conversation display
+        const conversationDiv = document.getElementById('conversation-messages');
+        const userTime = new Date().toLocaleTimeString();
+        
+        // Add user message
+        const userMsg = `
+            <div style="margin-bottom: 10px; padding: 10px; background: #e3f2fd; border-radius: 8px;">
+                <div style="font-weight: bold; color: #333;">🗣️ You <span style="font-size: 12px; color: #666;">(${userTime})</span></div>
+                <div style="margin-top: 5px; color: #555;">${data.transcribed_text}</div>
+            </div>
+        `;
+        
+        // Add AI response
+        const aiTime = new Date().toLocaleTimeString();
+        const aiMsg = `
+            <div style="margin-bottom: 10px; padding: 10px; background: #f3e5f5; border-radius: 8px;">
+                <div style="font-weight: bold; color: #333;">🤖 AI <span style="font-size: 12px; color: #666;">(${aiTime})</span></div>
+                <div style="margin-top: 5px; color: #555;">${data.llm_response}</div>
+            </div>
+        `;
+        
+        conversationDiv.innerHTML += userMsg + aiMsg;
+        conversationDiv.scrollTop = conversationDiv.scrollHeight; // Scroll to bottom
+        
+        // Load and play AI response audio
+        if (data.audio_url) {
+            audioPlayer.src = data.audio_url;
+            responseSection.style.display = 'block';
+            
+            // Auto-play if possible
+            try {
+                await audioPlayer.play();
+                statusDiv.textContent = '✅ AI responded! Playing audio response.';
+                statusDiv.style.color = '#28a745';
+                
+                // Auto-continue conversation if enabled
+                if (autoContinue.checked) {
+                    audioPlayer.addEventListener('ended', () => {
+                        setTimeout(() => {
+                            statusDiv.textContent = '🎙️ Ready for your next message. Click start talking!';
+                            statusDiv.style.color = '#28a745';
+                            // Could auto-start recording here, but better UX to let user click
+                        }, 1000);
+                    }, { once: true });
+                }
+                
+            } catch (playError) {
+                statusDiv.textContent = '✅ AI responded! Click play button to hear response.';
+                statusDiv.style.color = '#28a745';
+            }
+        } else {
+            statusDiv.textContent = '⚠️ AI responded but no audio generated.';
+            statusDiv.style.color = '#ffc107';
+            responseSection.style.display = 'block';
+        }
+        
+        console.log('Chat Response:', data);
+        
+    } catch (error) {
+        console.error('Chat Error:', error);
+        statusDiv.textContent = `❌ Error: ${error.message}`;
+        statusDiv.style.color = '#dc3545';
+        
+        processingTime.textContent = 'Failed';
+        responseSection.style.display = 'block';
+    }
+}
+
+// Initialize session when page loads
+document.addEventListener('DOMContentLoaded', () => {
+    initializeSession();
+});

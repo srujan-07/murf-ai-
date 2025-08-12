@@ -95,6 +95,30 @@ class AudioLLMQueryResponse(BaseModel):
     voice_used: Optional[str] = None
     processing_time: Optional[float] = None
 
+# Day 10: Chat History models
+class ChatMessage(BaseModel):
+    role: str  # "user" or "assistant"
+    content: str
+    timestamp: float
+
+class ChatSession(BaseModel):
+    session_id: str
+    messages: list[ChatMessage]
+    created_at: float
+    updated_at: float
+
+class ChatResponse(BaseModel):
+    success: bool
+    message: str
+    session_id: str
+    transcribed_text: Optional[str] = None
+    llm_response: Optional[str] = None
+    audio_url: Optional[str] = None
+    model_used: Optional[str] = None
+    voice_used: Optional[str] = None
+    processing_time: Optional[float] = None
+    message_count: Optional[int] = None
+
 # Murf API configuration
 MURF_API_KEY = os.getenv("MURF_API_KEY", "YOUR_MURF_API_KEY_HERE")
 
@@ -108,6 +132,10 @@ genai.configure(api_key=GEMINI_API_KEY)
 
 # Initialize Murf client
 murf_client = Murf(api_key=MURF_API_KEY)
+
+# Day 10: In-memory chat history storage
+# Note: In production, use a proper database like Redis, PostgreSQL, etc.
+chat_sessions: dict[str, ChatSession] = {}
 
 # Create uploads directory if it doesn't exist
 UPLOADS_DIR = Path("uploads")
@@ -630,6 +658,258 @@ async def query_llm_with_audio(
         raise HTTPException(
             status_code=500, 
             detail=f"Voice-to-voice AI pipeline failed: {str(e)}"
+        )
+
+# Day 10: Chat History Helper Functions
+def get_or_create_chat_session(session_id: str) -> ChatSession:
+    """Get existing chat session or create a new one"""
+    if session_id not in chat_sessions:
+        chat_sessions[session_id] = ChatSession(
+            session_id=session_id,
+            messages=[],
+            created_at=time.time(),
+            updated_at=time.time()
+        )
+    return chat_sessions[session_id]
+
+def add_message_to_session(session_id: str, role: str, content: str) -> None:
+    """Add a message to the chat session"""
+    session = get_or_create_chat_session(session_id)
+    message = ChatMessage(
+        role=role,
+        content=content,
+        timestamp=time.time()
+    )
+    session.messages.append(message)
+    session.updated_at = time.time()
+
+def build_conversation_context(session_id: str, max_messages: int = 20) -> str:
+    """Build conversation context from chat history"""
+    session = get_or_create_chat_session(session_id)
+    
+    # Get recent messages (limit to avoid token limits)
+    recent_messages = session.messages[-max_messages:] if len(session.messages) > max_messages else session.messages
+    
+    if not recent_messages:
+        return ""
+    
+    # Format conversation history for LLM
+    context = "Previous conversation:\n"
+    for msg in recent_messages:
+        role_name = "User" if msg.role == "user" else "Assistant"
+        context += f"{role_name}: {msg.content}\n"
+    
+    context += "\nNew message:\n"
+    return context
+
+# Day 10: Chat Agent Endpoint with Session Management
+@app.post("/api/agent/chat/{session_id}", response_model=ChatResponse)
+async def chat_with_agent(
+    session_id: str,
+    audio_file: UploadFile = File(...), 
+    model: str = "gemini-1.5-flash",
+    voice: str = "en-US-natalie",
+    temperature: float = 0.7
+):
+    """
+    Chat Agent with Session-based History:
+    1. Transcribe audio with AssemblyAI
+    2. Fetch chat history for session
+    3. Build conversation context with previous messages
+    4. Query Google Gemini LLM with full context
+    5. Store user message and AI response in chat history
+    6. Generate response audio with Murf TTS
+    7. Return audio URL for playback
+    """
+    start_time = time.time()
+    
+    try:
+        # Step 1: Validate audio file and session ID
+        if not audio_file.filename:
+            raise HTTPException(status_code=400, detail="No audio file provided")
+        
+        if not session_id or len(session_id.strip()) == 0:
+            raise HTTPException(status_code=400, detail="Invalid session ID")
+        
+        # Save uploaded audio file
+        file_id = int(time.time() * 1000)  # Use timestamp as unique ID
+        audio_filename = f"chat_{session_id}_{file_id}.webm"
+        audio_path = UPLOADS_DIR / audio_filename
+        
+        # Write uploaded file to disk
+        audio_content = await audio_file.read()
+        with open(audio_path, "wb") as f:
+            f.write(audio_content)
+        
+        print(f"Step 1: Audio file saved for session {session_id}: {audio_filename}")
+        
+        # Step 2: Transcribe audio with AssemblyAI
+        print("Step 2: Transcribing audio with AssemblyAI...")
+        
+        # Check AssemblyAI API key
+        if ASSEMBLY_AI_API_KEY == "YOUR_ASSEMBLY_AI_API_KEY_HERE":
+            raise HTTPException(
+                status_code=500,
+                detail="AssemblyAI API key not configured"
+            )
+        
+        transcriber = aai.Transcriber()
+        transcript = transcriber.transcribe(str(audio_path))
+        
+        if transcript.status == aai.TranscriptStatus.error:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Transcription failed: {transcript.error}"
+            )
+        
+        transcribed_text = transcript.text
+        if not transcribed_text or len(transcribed_text.strip()) == 0:
+            raise HTTPException(
+                status_code=400,
+                detail="No speech detected in audio file"
+            )
+        
+        print(f"Step 2 Complete: Transcribed text: '{transcribed_text[:100]}...'")
+        
+        # Step 3: Add user message to chat history
+        add_message_to_session(session_id, "user", transcribed_text)
+        
+        # Step 4: Build conversation context with chat history
+        conversation_context = build_conversation_context(session_id)
+        print(f"Step 3: Built conversation context with {len(get_or_create_chat_session(session_id).messages)} messages")
+        
+        # Step 5: Query Gemini LLM with conversation context
+        print("Step 4: Querying Gemini LLM with conversation context...")
+        
+        # Check Gemini API key
+        if GEMINI_API_KEY == "YOUR_GEMINI_API_KEY_HERE":
+            raise HTTPException(
+                status_code=500,
+                detail="Gemini API key not configured"
+            )
+        
+        # Create prompt with conversation context
+        if conversation_context:
+            llm_prompt = f"""{conversation_context}User: {transcribed_text}
+
+Please provide a helpful and conversational response that takes into account the previous conversation history. Keep responses concise for voice synthesis (max 2000 characters)."""
+        else:
+            llm_prompt = f"""Please provide a helpful and conversational response to this message (max 2000 characters for voice synthesis): {transcribed_text}"""
+        
+        gemini_model = genai.GenerativeModel(model)
+        llm_response = gemini_model.generate_content(llm_prompt)
+        
+        if not llm_response.text:
+            raise HTTPException(
+                status_code=500,
+                detail="No response generated by Gemini"
+            )
+        
+        llm_text = llm_response.text.strip()
+        print(f"Step 4 Complete: LLM response: '{llm_text[:100]}...' ({len(llm_text)} chars)")
+        
+        # Step 6: Add AI response to chat history
+        add_message_to_session(session_id, "assistant", llm_text)
+        
+        # Step 7: Handle long responses (Murf 3000 char limit)
+        if len(llm_text) > 3000:
+            print(f"Response too long ({len(llm_text)} chars), truncating to 2800 chars...")
+            llm_text = llm_text[:2800] + "..."
+        
+        # Step 8: Generate audio with Murf TTS
+        print("Step 5: Generating audio with Murf TTS...")
+        
+        # Check Murf API key
+        if MURF_API_KEY == "YOUR_MURF_API_KEY_HERE":
+            raise HTTPException(
+                status_code=500,
+                detail="Murf API key not configured"
+            )
+        
+        # Generate audio with Murf
+        tts_response = murf_client.text_to_speech.generate(
+            voice_id=voice,
+            text=llm_text
+        )
+        
+        print(f"Murf TTS Response: {tts_response}")
+        
+        # Extract audio file URL from response
+        audio_url = tts_response.audio_file if hasattr(tts_response, 'audio_file') else str(tts_response)
+        
+        # Cleanup: Remove uploaded audio file
+        try:
+            audio_path.unlink()
+        except:
+            pass  # Ignore cleanup errors
+        
+        processing_time = time.time() - start_time
+        message_count = len(get_or_create_chat_session(session_id).messages)
+        
+        return ChatResponse(
+            success=True,
+            message=f"Chat response successful for session {session_id}",
+            session_id=session_id,
+            transcribed_text=transcribed_text,
+            llm_response=llm_text,
+            audio_url=audio_url,
+            model_used=model,
+            voice_used=voice,
+            processing_time=round(processing_time, 2),
+            message_count=message_count
+        )
+        
+    except HTTPException:
+        # Cleanup on error
+        try:
+            if 'audio_path' in locals():
+                audio_path.unlink()
+        except:
+            pass
+        raise
+    except Exception as e:
+        # Cleanup on error
+        try:
+            if 'audio_path' in locals():
+                audio_path.unlink()
+        except:
+            pass
+        print(f"Error in chat agent pipeline: {e}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Chat agent pipeline failed: {str(e)}"
+        )
+
+# Day 10: Get Chat History Endpoint
+@app.get("/api/agent/chat/{session_id}/history")
+async def get_chat_history(session_id: str, limit: int = 50):
+    """Get chat history for a session"""
+    try:
+        session = get_or_create_chat_session(session_id)
+        
+        # Return recent messages (limited)
+        recent_messages = session.messages[-limit:] if len(session.messages) > limit else session.messages
+        
+        return {
+            "success": True,
+            "session_id": session_id,
+            "message_count": len(session.messages),
+            "messages": [
+                {
+                    "role": msg.role,
+                    "content": msg.content,
+                    "timestamp": msg.timestamp
+                }
+                for msg in recent_messages
+            ],
+            "created_at": session.created_at,
+            "updated_at": session.updated_at
+        }
+    except Exception as e:
+        print(f"Error fetching chat history: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to fetch chat history: {str(e)}"
         )
 
 if __name__ == "__main__":
