@@ -1,359 +1,307 @@
-# 30 Days of Voice Agents
+# 🎤🤖 Voice AI Chat Agent
 
-Welcome to the 30 Days of Voice Agents challenge! This project will build a comprehensive voice-powered application over 30 days.
+A robust, conversational AI agent with voice input/output, chat history, and comprehensive error handling. Built with FastAPI, AssemblyAI, Google Gemini, and Murf TTS.
 
-## Day 1: Project Setup ✅
+## 🌟 Features
 
-### What we built:
-- **FastAPI Backend**: Modern Python web framework with automatic API documentation
-- **Frontend**: HTML page with JavaScript for interacting with the backend
-- **Project Structure**: Organized file structure for scalability
+### 🎯 Core Capabilities
+- **Voice-to-Voice AI**: Speak to the AI and hear responses back
+- **Chat History & Memory**: Persistent conversation context across sessions
+- **Multi-Modal Input**: Voice, text, and file uploads
+- **Real-time Transcription**: High-accuracy speech-to-text
+- **Natural Voice Output**: High-quality AI-generated speech
+- **Session Management**: URL-based conversation tracking
 
-## Day 2: REST TTS Integration ✅
+### 🛡️ Robustness & Error Handling
+- **Graceful Degradation**: System continues functioning with partial service failures
+- **Smart Fallbacks**: Context-aware error responses for each service type
+- **Alternative Audio**: Browser speech synthesis when cloud TTS fails
+- **Visual Error Indicators**: Clear user feedback with error categorization
+- **Service Health Monitoring**: Real-time API status checking
 
-### What we built:
-- **TTS API Endpoint**: `/api/tts/generate` - Accepts text and generates audio URLs
-- **Voice Management**: `/api/tts/voices` - Lists available TTS voices
-- **Murf API Integration**: Real integration with Murf's Python SDK
-- **Input Validation**: Text length limits and error handling
-- **Response Models**: Structured JSON responses with audio URLs
+### 🎨 User Experience
+- **Intuitive Interface**: Clean, responsive web UI
+- **Auto-Continue Conversations**: Seamless chat flow
+- **Voice Selection**: Multiple AI voices to choose from
+- **Model Selection**: Choose between different AI models
+- **Real-time Status**: Live feedback during processing
 
-### Features Added in Day 2:
-- ✅ Text-to-Speech API endpoint with real Murf SDK integration
-- ✅ Configurable voice selection (Natalie, Davis, Jane, Mike, Emma)
-- ✅ Speed and pitch control parameters (ready for future use)
-- ✅ Comprehensive input validation and error handling
-- ✅ Real audio generation with Murf's cloud service
-- ✅ Production-ready code with proper error responses
+## 🏗️ Architecture
 
-## Day 3: Playing Back TTS Audio ✅
-
-### What we built:
-- **Text Input Interface**: Clean text field for user input with placeholder text
-- **Submit Button**: "Generate & Play Audio" button to trigger TTS generation
-- **HTML Audio Element**: Native `<audio>` controls for playback with auto-play attempt
-- **Audio URL Display**: Shows the generated Murf audio URL for direct access
-- **Voice Selection**: Dropdown to choose from available Murf voices
-- **Real-time Feedback**: Loading states, success messages, and error handling
-
-### Features Added in Day 3:
-- ✅ Clean web interface with text input and submit button
-- ✅ HTML5 audio element for immediate playback
-- ✅ Auto-play functionality (browser permitting)
-- ✅ Real-time status updates and loading indicators
-- ✅ Voice selection dropdown with real Murf voices
-- ✅ URL display for direct audio file access
-- ✅ Keyboard shortcuts and accessibility features
-- ✅ Mobile-responsive design
-
-## Day 4: Echo Bot with Voice Recording ✅
-
-### What we built today:
-- **Echo Bot Section**: New dedicated section for voice recording functionality
-- **Voice Recording**: MediaRecorder API integration for browser-based recording
-- **Recording Controls**: Start/Stop Recording buttons with proper state management
-- **Instant Playback**: Recorded audio plays back immediately using HTML5 audio
-- **Microphone Access**: Permission handling and user feedback for microphone access
-- **Visual Feedback**: Real-time status updates during recording process
-
-### Key Features:
-- ✅ **Voice Recording**: Record audio directly from your microphone
-- ✅ **Start/Stop Controls**: Clean button interface for recording management
-- ✅ **Instant Echo**: Play back your recorded voice immediately
-- ✅ **Microphone Permissions**: Handles browser permission requests gracefully
-- ✅ **Recording Status**: Visual feedback showing recording state
-- ✅ **Audio Storage**: Uses Blob API for temporary audio storage
-- ✅ **Cross-browser Support**: Works with modern browsers supporting MediaRecorder
-- ✅ **Error Handling**: User-friendly messages for microphone access issues
-
-### User Experience Flow:
-1. **Click Start Recording** → Browser requests microphone permission
-2. **Grant Permission** → Recording begins, status shows "Recording... Speak now!"
-3. **Speak into Microphone** → Voice is captured in real-time
-4. **Click Stop Recording** → Recording ends, audio is processed
-5. **Automatic Playback** → HTML audio player appears with your recorded voice
-6. **Listen to Echo** → Play back your voice using standard audio controls
-
-### Technical Implementation:
-- **MediaRecorder API**: Modern browser API for audio recording
-- **Blob Handling**: Efficient audio data management
-- **State Management**: Proper button enable/disable during recording
-- **Audio URL Creation**: Uses `URL.createObjectURL()` for playback
-- **Error Handling**: Comprehensive permission and recording error management
-
-## Project Structure:
 ```
-murf/
-├── main.py              # FastAPI backend server with TTS endpoints
-├── requirements.txt     # Python dependencies (murf SDK, FastAPI, uvicorn)
-├── .env.example         # Environment configuration template
-├── static/             # Frontend assets
-│   ├── index.html      # Day 4: TTS + Echo Bot complete interface
-│   └── app.js          # Day 4: TTS + MediaRecorder functionality
-├── test_day3.py        # Day 3: Complete testing suite
-├── test_murf_sdk.py    # Day 2: SDK integration tests
-├── test_tts.py         # Day 2: Legacy test file
-└── README.md           # This file
+Voice Input → AssemblyAI STT → Google Gemini LLM → Murf TTS → Audio Output
+     ↓              ↓                ↓               ↓            ↓
+  WebM Audio → Text Transcript → AI Response → Audio URL → Browser Playback
 ```
 
-## Quick Start
+### 🔧 Technology Stack
 
-### 1. Install Dependencies
+**Backend:**
+- **FastAPI**: Modern, fast Python web framework
+- **AssemblyAI**: Speech-to-text transcription
+- **Google Gemini**: Large language model for AI responses
+- **Murf TTS**: High-quality text-to-speech synthesis
+- **Python 3.13**: Latest Python with type hints
+
+**Frontend:**
+- **Vanilla JavaScript**: No framework dependencies
+- **MediaRecorder API**: Browser-native audio recording
+- **SpeechSynthesis API**: Fallback text-to-speech
+- **HTML5**: Modern web standards
+
+**APIs & Services:**
+- **AssemblyAI API**: Real-time speech recognition
+- **Google Gemini API**: Advanced language understanding
+- **Murf API**: Professional voice synthesis
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Python 3.11+
+- API Keys for:
+  - [AssemblyAI](https://www.assemblyai.com/)
+  - [Google Gemini](https://makersuite.google.com/app/apikey)
+  - [Murf](https://murf.ai/api)
+
+### Installation
+
+1. **Clone the repository:**
+```bash
+git clone https://github.com/srujan-07/murf-ai-.git
+cd murf-ai-
+```
+
+2. **Create virtual environment:**
+```bash
+python -m venv .venv
+.venv\Scripts\activate  # Windows
+# source .venv/bin/activate  # macOS/Linux
+```
+
+3. **Install dependencies:**
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. Configure Murf API (Optional)
+4. **Configure environment variables:**
 ```bash
 cp .env.example .env
-# Edit .env and add your Murf API key
+# Edit .env with your API keys
 ```
 
-### 3. Run the Server
+Example `.env` file:
+```properties
+# Murf API Configuration
+MURF_API_KEY=your_murf_api_key_here
+
+# AssemblyAI API Configuration
+ASSEMBLY_AI_API_KEY=your_assemblyai_api_key_here
+
+# Google Gemini API Configuration
+GEMINI_API_KEY=your_gemini_api_key_here
+
+# Server Configuration
+HOST=0.0.0.0
+PORT=8000
+DEBUG=True
+```
+
+5. **Start the server:**
 ```bash
-python main.py
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-### 4. Test the Application
-**Day 4 Interface**: http://localhost:8000
+6. **Open your browser:**
+Visit `http://localhost:8000` to start using the voice AI chat agent!
 
-**Text-to-Speech Section:**
-- Enter text in the input field
-- Select a voice from the dropdown
-- Click "Generate & Play Audio"
-- Listen to the generated speech!
+## 📖 Usage Guide
 
-**Echo Bot Section:**
-- Click "Start Recording"
-- Allow microphone access when prompted
-- Speak into your microphone
-- Click "Stop Recording"
-- Listen to your voice played back instantly!
+### 🎙️ Basic Voice Chat
+1. Click "Start Talking" to begin recording
+2. Speak your question or message
+3. Click "Stop & Send" to process
+4. Listen to the AI's voice response
+5. Continue the conversation with context preserved
 
-**API Documentation**: http://localhost:8000/docs
+### 💬 Session Management
+- **Auto Session ID**: Generated automatically and stored in URL
+- **Custom Session ID**: Enter your own session identifier
+- **Session History**: View past conversation messages
+- **Clear History**: Reset conversation context
 
-## API Endpoints
+### ⚙️ Configuration Options
+- **Voice Selection**: Choose from multiple AI voices
+- **Model Selection**: Pick AI model (Flash for speed, Pro for quality)
+- **Auto-continue**: Automatically prepare for next message after response
+- **Temperature**: Control AI response creativity (0.0-1.0)
 
-### General Endpoints:
-- `GET /` - Serves the main HTML page
-- `GET /api/health` - Health check endpoint
-- `GET /api/voice-agents` - Voice agents status
+## 🔌 API Endpoints
 
-### TTS Endpoints:
-- `POST /api/tts/generate` - Generate audio from text
-- `GET /api/tts/voices` - List available voices
+### Chat & Voice
+- `POST /api/agent/chat/{session_id}` - Voice chat with session memory
+- `POST /api/llm/query/audio` - Voice-to-voice AI (stateless)
+- `POST /api/llm/query` - Text-based LLM queries
 
-### Example TTS Request:
-```json
-{
-  "text": "Hello! This is Day 4 of the Voice Agents challenge!",
-  "voice_id": "en-US-natalie"
-}
+### Core Services
+- `POST /api/tts/generate` - Text-to-speech generation
+- `POST /api/transcribe/file` - Audio file transcription
+- `POST /api/tts/echo` - Echo bot with voice
+
+### Utilities
+- `GET /api/health` - Basic health check
+- `GET /api/health/detailed` - Detailed service status
+- `GET /api/agent/chat/{session_id}/history` - Chat history
+- `POST /api/audio/upload` - Audio file upload
+
+## 🧪 Testing & Development
+
+### Test Scripts
+```bash
+# Test chat functionality
+python test_chat_agent.py
+
+# Test error handling scenarios
+python test_error_handling.py
+
+# Error handling documentation
+python test_error_demo.py
+
+# TTS-specific error testing
+python test_tts_error.py
 ```
 
-## What's Next?
+### Error Simulation
+The system includes tools to simulate API failures for testing:
 
-Day 5 will add:
-- Speech-to-Text functionality
-- Voice command recognition
-- Interactive voice conversations
-- Advanced audio processing
+```bash
+# Simulate different failure scenarios
+python test_error_handling.py
+# Choose: STT failure, LLM failure, TTS failure, or complete failure
+```
 
-## Technologies Used
+### Health Monitoring
+```bash
+# Check service status
+curl http://localhost:8000/api/health/detailed
+```
 
-- **Backend**: FastAPI, Uvicorn, Murf Python SDK
-- **Frontend**: HTML5, CSS3, JavaScript (ES6+), HTML5 Audio API, MediaRecorder API
-- **TTS Integration**: Murf AI cloud service
-- **Voice Recording**: Browser MediaRecorder API
-- **Data Validation**: Pydantic models
-- **Audio Playback**: Native HTML5 audio elements
+## 🛡️ Error Handling
+
+### Graceful Degradation
+- **STT Failure**: "Sorry, I couldn't understand due to technical issue"
+- **LLM Failure**: "Having trouble processing your request right now"
+- **TTS Failure**: Text response + browser speech synthesis backup
+- **Network Issues**: Clear user guidance with retry suggestions
+
+### Visual Indicators
+- **Green**: Successful operations
+- **Yellow**: Warnings or degraded service
+- **Red**: Errors with clear explanations
+- **Blue**: Processing states
+
+### Fallback Mechanisms
+1. **Browser TTS**: When cloud TTS fails
+2. **Predefined Responses**: When LLM is unavailable
+3. **Error Messages**: When STT fails
+4. **Conversation Continuity**: Context preserved across failures
+
+## 📁 Project Structure
+
+```
+murf-ai-/
+├── main.py                 # FastAPI application
+├── requirements.txt        # Python dependencies
+├── .env.example           # Environment template
+├── README.md              # This file
+├── static/
+│   ├── index.html         # Web interface
+│   └── app.js            # Frontend JavaScript
+├── uploads/               # Temporary audio files
+├── __pycache__/          # Python cache
+└── tests/
+    ├── test_chat_agent.py     # Chat functionality tests
+    ├── test_error_handling.py # Error simulation tools
+    ├── test_error_demo.py     # Error documentation
+    └── test_tts_error.py      # TTS error testing
+```
+
+## 🎯 Development Journey
+
+This project was built incrementally over 11 days:
+
+- **Day 1-3**: Basic TTS with Murf API
+- **Day 4-5**: Audio upload and file handling
+- **Day 6**: Speech-to-text transcription
+- **Day 7**: Echo bot functionality
+- **Day 8**: LLM integration with Gemini
+- **Day 9**: Voice-to-voice AI pipeline
+- **Day 10**: Chat history and session management
+- **Day 11**: Comprehensive error handling and robustness
+
+## 🔐 Security & Privacy
+
+- **API Keys**: Stored securely in environment variables
+- **File Cleanup**: Uploaded audio files automatically deleted
+- **Session Isolation**: Chat histories separated by session ID
+- **Input Validation**: All inputs sanitized and validated
+- **Error Handling**: No sensitive information exposed in errors
+
+## 🚀 Deployment
+
+### Local Development
+```bash
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+### Production
+```bash
+uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4
+```
+
+### Environment Variables
+Ensure all required API keys are set in production:
+- `MURF_API_KEY`
+- `ASSEMBLY_AI_API_KEY`
+- `GEMINI_API_KEY`
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- **AssemblyAI** for excellent speech recognition
+- **Google Gemini** for powerful language understanding
+- **Murf** for high-quality voice synthesis
+- **FastAPI** for the excellent web framework
+
+## 📞 Support
+
+If you encounter any issues or have questions:
+
+1. Check the [Issues](https://github.com/srujan-07/murf-ai-/issues) page
+2. Review the error handling documentation in `test_error_demo.py`
+3. Run the health check: `curl http://localhost:8000/api/health/detailed`
+
+## 🎯 Future Enhancements
+
+- **Database Integration**: Persistent chat history storage
+- **User Authentication**: Multi-user support
+- **Voice Cloning**: Custom voice training
+- **Real-time Streaming**: Live audio processing
+- **Mobile App**: Native iOS/Android applications
+- **Multi-language Support**: International voice agents
 
 ---
 
-*Day 4 of 30 - Echo Bot Complete! 🎤🔊🎵*
+Built with ❤️ by [Srujan](https://github.com/srujan-07)
 
-### What we built:
-- **TTS API Endpoint**: `/api/tts/generate` - Accepts text and generates audio URLs
-- **Voice Management**: `/api/tts/voices` - Lists available TTS voices
-- **Murf API Integration**: Real integration with Murf's Python SDK
-- **Input Validation**: Text length limits and error handling
-- **Response Models**: Structured JSON responses with audio URLs
-
-## Day 3: Playing Back TTS Audio ✅
-
-### What we built today:
-- **Text Input Interface**: Clean text field for user input with placeholder text
-- **Submit Button**: "Generate & Play Audio" button to trigger TTS generation
-- **HTML Audio Element**: Native `<audio>` controls for playback with auto-play attempt
-- **Audio URL Display**: Shows the generated Murf audio URL for direct access
-- **Voice Selection**: Dropdown to choose from available Murf voices
-- **Real-time Feedback**: Loading states, success messages, and error handling
-
-### Key Features:
-- ✅ **Text Field**: Large textarea with placeholder and character validation
-- ✅ **Submit Button**: Generates audio and automatically plays it
-- ✅ **HTML Audio Player**: Native browser controls with volume, seek, download
-- ✅ **URL Display**: Shows actual Murf S3 audio URLs for sharing/downloading
-- ✅ **Voice Selection**: Real Murf voices (Natalie, Davis, Jane, Mike, Emma)
-- ✅ **Keyboard Shortcuts**: Press Enter to generate (Ctrl+Enter for new line)
-- ✅ **Auto-play**: Attempts to play audio immediately after generation
-- ✅ **Error Handling**: User-friendly error messages and validation
-- ✅ **Responsive Design**: Works on desktop and mobile devices
-
-### User Experience Flow:
-1. **Enter Text** → User types in the textarea
-2. **Select Voice** → Choose from dropdown (default: Natalie)
-3. **Click Generate** → Button calls `/api/tts/generate` endpoint
-4. **API Processing** → Murf SDK generates real audio file
-5. **Audio Playback** → HTML `<audio>` element plays the generated speech
-6. **URL Available** → Direct link to Murf S3 audio file displayed
-
-### New API Endpoints:
-- `POST /api/tts/generate` - Generate TTS audio from text
-- `GET /api/tts/voices` - Get available voices
-
-### Features Added in Day 2:
-- ✅ Text-to-Speech API endpoint with real Murf SDK integration
-- ✅ Configurable voice selection (Natalie, Davis, Jane, Mike, Emma)
-- ✅ Speed and pitch control parameters (ready for future use)
-- ✅ Comprehensive input validation and error handling
-- ✅ Real audio generation with Murf's cloud service
-- ✅ Production-ready code with proper error responses
-
-### Features Added in Day 3:
-- ✅ Clean web interface with text input and submit button
-- ✅ HTML5 audio element for immediate playback
-- ✅ Auto-play functionality (browser permitting)
-- ✅ Real-time status updates and loading indicators
-- ✅ Voice selection dropdown with real Murf voices
-- ✅ URL display for direct audio file access
-- ✅ Keyboard shortcuts and accessibility features
-- ✅ Mobile-responsive design
-
-## Project Structure:
-```
-murf/
-├── main.py              # FastAPI backend server with TTS endpoints
-├── requirements.txt     # Python dependencies (murf SDK, FastAPI, uvicorn)
-├── .env.example         # Environment configuration template
-├── static/             # Frontend assets
-│   ├── index.html      # Day 3: Enhanced UI with audio playback
-│   └── app.js          # Day 3: TTS functionality and audio controls
-├── test_day3.py        # Day 3: Complete testing suite
-├── test_murf_sdk.py    # Day 2: SDK integration tests
-├── test_tts.py         # Day 2: Legacy test file
-└── README.md           # This file
-```
-
-## Quick Start
-
-### 1. Install Dependencies
-```bash
-pip install -r requirements.txt
-```
-
-### 2. Configure Murf API (Optional)
-```bash
-cp .env.example .env
-# Edit .env and add your Murf API key
-```
-
-### 3. Run the Server
-```bash
-python main.py
-```
-
-### 4. Test the Application
-**Day 3 Interface**: http://localhost:8000
-- Enter text in the input field
-- Select a voice from the dropdown
-- Click "Generate & Play Audio"
-- Listen to the generated speech!
-
-**API Documentation**: http://localhost:8000/docs
-- **Try the TTS endpoint**: POST to `/api/tts/generate` with JSON:
-```json
-{
-  "text": "Hello! This is Day 3 of the Voice Agents challenge!",
-  "voice_id": "en-US-natalie"
-}
-```
-
-## Day 7: Echo Bot v2 - Complete Voice Pipeline ✅
-
-### What we built:
-- **Enhanced Echo Bot**: Complete voice-to-voice pipeline with transcription and TTS
-- **AssemblyAI Integration**: High-quality speech-to-text transcription
-- **Audio Processing Pipeline**: Record → Upload → Transcribe → Generate TTS → Playback
-- **Improved UI**: Updated interface with "Echo Bot v2 with Murf TTS"
-- **Error Handling**: Comprehensive error handling for the entire voice pipeline
-
-### Features Added in Day 7:
-- ✅ Real-time transcription with AssemblyAI
-- ✅ Voice-to-voice echo functionality (your voice → text → AI voice)
-- ✅ Enhanced Echo Bot interface with proper status messages
-- ✅ Audio file management and cleanup
-- ✅ Production-ready voice pipeline
-- ✅ Configurable TTS voice selection for echo playback
-
-## Day 8: LLM Integration with Google Gemini ✅
-
-### What we built:
-- **Google Gemini API Integration**: Added Google's Gemini 1.5 Flash and Pro models
-- **LLM Query Endpoint**: `/api/llm/query` - Accepts text and returns AI responses
-- **Frontend LLM Interface**: Clean chat-like interface for AI conversations
-- **Model Selection**: Choose between Gemini 1.5 Flash (fast) and Pro (advanced)
-- **Configuration Controls**: Temperature and token limit controls
-- **Test Scripts**: Validation scripts for API functionality
-
-### Features Added in Day 8:
-- ✅ Google Gemini API integration with `google-generativeai` package
-- ✅ RESTful LLM endpoint with proper error handling
-- ✅ Frontend chat interface with textarea and controls
-- ✅ Model selection (gemini-1.5-flash, gemini-1.5-pro)
-- ✅ Temperature and max tokens configuration
-- ✅ Real-time response streaming and display
-- ✅ Comprehensive test suite for LLM functionality
-- ✅ Error handling for API limits and content filtering
-
----
-
-## API Endpoints
-
-### General Endpoints:
-- `GET /` - Serves the main HTML page
-- `GET /api/health` - Health check endpoint  
-- `GET /api/voice-agents` - Voice agents status
-
-### TTS Endpoints:
-- `POST /api/tts/generate` - Generate audio from text
-- `GET /api/tts/voices` - List available voices
-- `POST /api/tts/echo` - Echo Bot v2 with transcription and TTS
-
-### Transcription Endpoints:
-- `POST /api/transcribe/file` - Transcribe uploaded audio file
-
-### LLM Endpoints (NEW):
-- `POST /api/llm/query` - Query Google Gemini with text input
-
-## What's Next?
-
-Day 9 will add:
-- Multi-modal capabilities (image + text)
-- Voice-to-LLM pipeline
-- Enhanced conversation memory
-- Advanced prompt engineering
-
-## Technologies Used
-
-- **Backend**: FastAPI, Uvicorn, Python 3.13+
-- **Frontend**: HTML5, CSS3, JavaScript (ES6+)
-- **TTS Integration**: Murf API (Official Python SDK)
-- **Transcription**: AssemblyAI Python SDK
-- **LLM Integration**: Google Gemini API (google-generativeai)
-- **Data Validation**: Pydantic models
-- **Environment Management**: python-dotenv
-
----
-
-*Day 8 of 30 - LLM Integration Complete! 🤖🧠*
+**Start building the future of voice AI today!** 🚀🎤🤖

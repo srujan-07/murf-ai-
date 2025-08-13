@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>30 Days of Voice Agents - Day 10</title>
+    <title>30 Days of Voice Agents - Day 12</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -21,7 +21,7 @@
             padding: 40px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.1);
             text-align: center;
-            max-width: 600px;
+            max-width: 700px;
             margin: 20px;
         }
         h1 {
@@ -30,13 +30,15 @@
             font-size: 2.5em;
         }
         .day-badge {
-            background: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 10px 20px;
+            padding: 12px 24px;
             border-radius: 25px;
             display: inline-block;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
             font-weight: bold;
+            font-size: 1.1em;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
         }
         .status {
             margin: 20px 0;
@@ -45,225 +47,358 @@
             background: #f8f9fa;
             border-left: 4px solid #28a745;
         }
-        button {
-            background: #667eea;
+        
+        /* Chat Agent Section Styles */
+        #chat-agent-section {
+            background: linear-gradient(135deg, #e8f5e8 0%, #d4edda 100%);
+            border: 2px solid #28a745;
+            border-radius: 20px;
+            padding: 30px;
+            margin: 30px 0;
+            text-align: left;
+            box-shadow: 0 10px 30px rgba(40, 167, 69, 0.1);
+        }
+        
+        #chat-agent-section h1 {
+            font-size: 2.2em;
+            color: #28a745;
+            margin-bottom: 15px;
+            text-align: center;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        #chat-agent-section p {
+            color: #495057;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.1em;
+        }
+        
+        .session-info {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border: 1px solid #e9ecef;
+        }
+        
+        .session-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        #session-id-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #ced4da;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            min-width: 200px;
+        }
+        
+        #session-id-input:focus {
+            border-color: #28a745;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.25);
+        }
+        
+        .session-btn {
+            background: #28a745;
             color: white;
             border: none;
-            padding: 15px 30px;
+            padding: 12px 20px;
             border-radius: 10px;
             cursor: pointer;
-            font-size: 16px;
-            margin: 10px;
-            transition: background 0.3s ease;
-        }
-        button:hover {
-            background: #5a6fd8;
-        }
-        #response {
-            margin-top: 20px;
-            padding: 15px;
-            background: #e9ecef;
-            border-radius: 10px;
-            min-height: 50px;
-            text-align: left;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            white-space: nowrap;
         }
         
-        /* Day 3 Specific Styles */
-        #tts-interface {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 15px;
-            padding: 25px;
-            margin: 25px 0;
-            text-align: left;
+        .session-btn:hover {
+            background: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
         }
         
-        .input-group {
+        .clear-btn {
+            background: #dc3545;
+        }
+        
+        .clear-btn:hover {
+            background: #c82333;
+            box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4);
+        }
+        
+        .session-stats {
             display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        
-        #text-input {
-            width: 100%;
-            padding: 15px;
-            border: 2px solid #ced4da;
-            border-radius: 10px;
-            font-family: inherit;
-            font-size: 16px;
-            resize: vertical;
-            min-height: 100px;
-            box-sizing: border-box;
-            transition: border-color 0.3s ease;
-        }
-        
-        #text-input:focus {
-            border-color: #667eea;
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.25);
-        }
-        
-        .controls {
-            display: flex;
-            gap: 15px;
-            align-items: center;
+            justify-content: space-between;
+            font-size: 14px;
+            color: #6c757d;
             flex-wrap: wrap;
+            gap: 20px;
         }
         
-        #voice-selector {
-            padding: 12px 15px;
+        .chat-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Main Record Button */
+        #record-btn {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+            position: relative;
+            overflow: hidden;
+            min-width: 200px;
+        }
+        
+        #record-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(255, 107, 107, 0.6);
+        }
+        
+        #record-btn:active {
+            transform: translateY(-1px);
+        }
+        
+        #record-btn.recording {
+            background: linear-gradient(135deg, #ff4757 0%, #c44569 100%);
+            animation: pulse 1.5s infinite;
+            box-shadow: 0 8px 25px rgba(255, 71, 87, 0.6);
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .record-icon {
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+        
+        .select-controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .select-controls select {
+            padding: 10px 15px;
             border: 2px solid #ced4da;
             border-radius: 8px;
             font-size: 14px;
             background: white;
-            min-width: 200px;
-            cursor: pointer;
-        }
-        
-        #voice-selector:focus {
-            border-color: #667eea;
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.25);
-        }
-        
-        #submit-btn {
-            padding: 12px 25px;
-            font-size: 16px;
-            font-weight: bold;
-            border-radius: 8px;
             cursor: pointer;
             transition: all 0.3s ease;
+            min-width: 150px;
         }
         
-        #submit-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        }
-        
-        #submit-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-        
-        #audio-section {
-            background: #e8f5e8;
-            border: 1px solid #c3e6c3;
-            border-radius: 15px;
-            padding: 25px;
-            margin: 25px 0;
-            text-align: left;
-        }
-        
-        #audio-player {
-            width: 100%;
-            height: 50px;
-            margin: 15px 0;
-            border-radius: 8px;
-        }
-        
-        .audio-info {
-            margin-top: 15px;
-        }
-        
-        .url-display {
-            background: white;
-            border: 1px solid #ced4da;
-            border-radius: 8px;
-            padding: 12px;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            word-break: break-all;
-            max-height: 100px;
-            overflow-y: auto;
-            color: #495057;
-        }
-        
-        .additional-controls {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #dee2e6;
-        }
-        
-        .additional-controls button {
-            margin: 5px;
-            padding: 8px 16px;
-            font-size: 14px;
-        }
-        .microphone {
-            font-size: 3em;
-            margin-bottom: 20px;
-            color: #667eea;
-        }
-        
-        /* Day 8: LLM Interface Styles */
-        #llm-section {
-            background: #e8f5e8;
-            border: 1px solid #c3e6cb;
-            border-radius: 15px;
-            padding: 25px;
-            margin: 25px 0;
-            text-align: left;
-        }
-        
-        #llm-input {
-            width: 100%;
-            min-height: 100px;
-            padding: 15px;
-            border: 2px solid #ced4da;
-            border-radius: 8px;
-            font-size: 16px;
-            font-family: inherit;
-            resize: vertical;
-            margin-bottom: 15px;
-            box-sizing: border-box;
-        }
-        
-        #llm-input:focus {
-            border-color: #667eea;
+        .select-controls select:focus {
+            border-color: #28a745;
             outline: none;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.25);
+            box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.25);
         }
         
-        .llm-controls {
+        .auto-continue-label {
             display: flex;
-            gap: 15px;
             align-items: center;
-            flex-wrap: wrap;
-            margin-bottom: 20px;
-        }
-        
-        #model-selector, #temperature-input, #max-tokens-input {
-            padding: 8px 12px;
-            border: 2px solid #ced4da;
-            border-radius: 6px;
+            gap: 8px;
             font-size: 14px;
+            color: #495057;
+            cursor: pointer;
         }
         
-        #model-selector:focus, #temperature-input:focus, #max-tokens-input:focus {
-            border-color: #667eea;
-            outline: none;
+        .auto-continue-label input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #28a745;
         }
         
-        #llm-response {
+        .conversation-display {
             background: white;
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            padding: 20px;
-            margin-top: 20px;
-            display: none;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            max-height: 400px;
+            border: 1px solid #e9ecef;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            max-height: 350px;
             overflow-y: auto;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
         }
         
-        .llm-stats {
+        .conversation-display h4 {
+            color: #495057;
+            margin-top: 0;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.2em;
+        }
+        
+        #conversation-messages {
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .message-item {
+            margin-bottom: 15px;
+            padding: 15px;
+            border-radius: 12px;
+            animation: fadeInUp 0.5s ease;
+        }
+        
+        .user-message {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+        }
+        
+        .ai-message {
+            background: #f3e5f5;
+            border-left: 4px solid #9c27b0;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .message-header {
+            font-weight: bold;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .message-time {
             font-size: 12px;
+            color: #666;
+            font-weight: normal;
+        }
+        
+        .message-content {
+            color: #333;
+            line-height: 1.5;
+        }
+        
+        #chat-response-section {
+            display: none;
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            animation: slideInUp 0.5s ease;
+        }
+        
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        #chat-response-section h4 {
+            color: #495057;
+            margin-top: 0;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .response-details {
+            font-size: 13px;
             color: #6c757d;
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px solid #dee2e6;
+            margin-top: 15px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .response-detail {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 3px solid #28a745;
+        }
+        
+        #chat-status {
+            margin-top: 20px;
+            color: #495057;
+            font-style: italic;
+            text-align: center;
+            font-size: 1.1em;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+        }
+        
+        /* Hidden audio player */
+        #chat-audio-player {
+            display: none;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 25px;
+                margin: 15px;
+            }
+            
+            .chat-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            #record-btn {
+                min-width: auto;
+                width: 100%;
+            }
+            
+            .session-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            #session-id-input {
+                min-width: auto;
+            }
+            
+            .session-stats {
+                flex-direction: column;
+                gap: 10px;
+            }
         }
     </style>
 </head>
@@ -271,198 +406,77 @@
     <div class="container">
         <div class="microphone">🎤</div>
         <h1>Voice Agents Project</h1>
-        <div class="day-badge">Day 10: Chat History & Session Management</div>
+        <div class="day-badge">Day 12: UI Revamp & Enhanced Experience</div>
         
         <div class="status">
-            <strong>Status:</strong> <span id="status">Ready to generate speech</span>
+            <strong>Status:</strong> <span id="status">Ready for conversation</span>
         </div>
         
-        <!-- Day 3: Main TTS Interface -->
-        <div id="tts-interface">
-            <h4 style="margin-bottom: 15px; color: #495057;">🎤 Enter Text to Convert to Speech</h4>
+        <!-- Day 12: Enhanced Chat Agent UI Section -->
+        <div id="chat-agent-section">
+            <h1>💬🧠 AI Conversation Agent</h1>
+            <p>Have intelligent conversations with AI! Your agent remembers context and responds naturally.</p>
             
-            <div class="input-group">
-                <textarea 
-                    id="text-input" 
-                    placeholder="Type your text here... (e.g., 'Hello! Welcome to Day 3 of the Voice Agents challenge!')"
-                    rows="4"></textarea>
+            <div class="session-info">
+                <div class="session-controls">
+                    <input type="text" id="session-id-input" placeholder="Enter session ID or leave blank for auto">
+                    <button class="session-btn" onclick="generateSessionId()">🎲 Random ID</button>
+                    <button class="session-btn clear-btn" onclick="clearSession()">🗑️ Clear History</button>
+                </div>
+                <div class="session-stats">
+                    <span><strong>Current Session:</strong> <span id="current-session-display">Not set</span></span>
+                    <span><strong>Messages in History:</strong> <span id="message-count-display">0</span></span>
+                </div>
+            </div>
+            
+            <div class="chat-controls">
+                <button id="record-btn" onclick="toggleRecording()">
+                    <span class="record-icon">🎙️</span>
+                    <span id="record-text">Start Conversation</span>
+                </button>
                 
-                <div class="controls">
-                    <select id="voice-selector">
-                        <option value="en-US-natalie">Natalie (US Female)</option>
-                        <option value="en-US-davis">Davis (US Male)</option>
-                        <option value="en-US-jane">Jane (US Female)</option>
-                        <option value="en-US-mike">Mike (US Male)</option>
+                <div class="select-controls">
+                    <select id="chat-voice-selector">
+                        <option value="en-US-natalie">Natalie (Female)</option>
                         <option value="en-UK-emma">Emma (UK Female)</option>
+                        <option value="en-US-mike">Mike (Male)</option>
+                        <option value="en-US-jane">Jane (Female)</option>
                     </select>
                     
-                    <button id="submit-btn" onclick="generateAndPlayAudio()">
-                        🔊 Generate & Play Audio
-                    </button>
-                </div>
-            </div>
-        </div>
-        <!-- Day 4: Echo Bot Section -->
-        <div id="echo-bot-section" style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 15px; padding: 25px; margin: 25px 0; text-align: left;">
-            <h1 style="font-size: 2em; color: #667eea; margin-bottom: 15px;">Echo Bot v2 with Murf TTS</h1>
-            <p style="color: #495057; margin-bottom: 15px;">Record your voice → Transcribe → Play back in Murf's AI voice!</p>
-            <div class="echo-controls" style="display: flex; gap: 15px; margin-bottom: 20px;">
-                <button id="start-record-btn" onclick="startRecording()">🎙️ Start Recording</button>
-                <button id="stop-record-btn" onclick="stopRecording()" disabled>⏹️ Stop Recording</button>
-            </div>
-            <div id="echo-audio-section" style="display: none;">
-                <h4 style="color: #495057;">🔊 Playback</h4>
-                <audio id="echo-audio-player" controls style="width: 100%; height: 50px; margin: 15px 0; border-radius: 8px;"></audio>
-            </div>
-            <div id="echo-status" style="margin-top: 10px; color: #495057;"></div>
-        </div>
-        
-        <!-- Day 8: LLM Query Section -->
-        <div id="llm-section">
-            <h1 style="font-size: 2em; color: #28a745; margin-bottom: 15px;">🤖 LLM Chat with Google Gemini</h1>
-            <p style="color: #495057; margin-bottom: 15px;">Ask questions and get intelligent responses from Google's Gemini AI model!</p>
-            
-            <textarea id="llm-input" placeholder="Ask me anything... (e.g., 'What is the capital of France?', 'Explain quantum computing', 'Write a short poem about AI')"></textarea>
-            
-            <div class="llm-controls">
-                <select id="model-selector">
-                    <option value="gemini-1.5-flash">Gemini 1.5 Flash (Fast)</option>
-                    <option value="gemini-1.5-pro">Gemini 1.5 Pro (Advanced)</option>
-                </select>
-                
-                <label for="temperature-input" style="margin-left: 10px;">Temperature:</label>
-                <input type="number" id="temperature-input" min="0" max="2" step="0.1" value="0.7" style="width: 80px;">
-                
-                <label for="max-tokens-input" style="margin-left: 10px;">Max Tokens:</label>
-                <input type="number" id="max-tokens-input" min="50" max="2000" step="50" value="500" style="width: 100px;">
-                
-                <button id="ask-llm-btn" onclick="queryLLM()" style="background: #28a745; margin-left: auto;">
-                    🚀 Ask Gemini
-                </button>
-            </div>
-            
-            <div id="llm-response">
-                <div id="llm-response-text"></div>
-                <div class="llm-stats" id="llm-stats"></div>
-            </div>
-            
-            <div id="llm-status" style="margin-top: 15px; color: #495057; font-style: italic;"></div>
-        </div>
-        
-        <!-- Day 10: Chat Agent with History Section -->
-        <div id="chat-agent-section" style="background: #e8f5e8; border: 1px solid #28a745; border-radius: 15px; padding: 25px; margin: 25px 0; text-align: left;">
-            <h1 style="font-size: 2em; color: #28a745; margin-bottom: 15px;">💬🧠 Chat Agent with Memory</h1>
-            <p style="color: #495057; margin-bottom: 15px;">Have conversations with AI! It remembers your chat history within each session.</p>
-            
-            <div class="session-info" style="background: white; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
-                <div style="display: flex; gap: 15px; align-items: center; margin-bottom: 10px;">
-                    <label style="font-weight: bold;">Session ID:</label>
-                    <input type="text" id="session-id-input" placeholder="Enter session ID or leave blank for auto" 
-                           style="flex: 1; padding: 8px 12px; border: 2px solid #ced4da; border-radius: 6px;">
-                    <button onclick="generateSessionId()" style="background: #28a745;">🎲 Random ID</button>
-                    <button onclick="clearSession()" style="background: #dc3545;">🗑️ Clear History</button>
-                </div>
-                <div style="font-size: 14px; color: #6c757d;">
-                    <span><strong>Current Session:</strong> <span id="current-session-display">Not set</span></span>
-                    <span style="margin-left: 20px;"><strong>Messages in History:</strong> <span id="message-count-display">0</span></span>
+                    <select id="chat-model-selector">
+                        <option value="gemini-1.5-flash">Gemini Flash (Fast)</option>
+                        <option value="gemini-1.5-pro">Gemini Pro (Advanced)</option>
+                    </select>
+                    
+                    <label class="auto-continue-label">
+                        <input type="checkbox" id="auto-continue-chat" checked> Auto-continue chat
+                    </label>
                 </div>
             </div>
             
-            <div class="chat-controls" style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
-                <button id="start-chat-btn" onclick="startChatRecording()">🎙️ Start Talking</button>
-                <button id="stop-chat-btn" onclick="stopChatRecording()" disabled>⏹️ Stop & Send</button>
-                
-                <select id="chat-voice-selector" style="padding: 8px 12px; border: 2px solid #ced4da; border-radius: 6px;">
-                    <option value="en-US-natalie">Natalie (Female)</option>
-                    <option value="en-UK-emma">Emma (UK Female)</option>
-                    <option value="en-US-mike">Mike (Male)</option>
-                    <option value="en-US-jane">Jane (Female)</option>
-                </select>
-                
-                <select id="chat-model-selector" style="padding: 8px 12px; border: 2px solid #ced4da; border-radius: 6px;">
-                    <option value="gemini-1.5-flash">Gemini Flash (Fast)</option>
-                    <option value="gemini-1.5-pro">Gemini Pro (Advanced)</option>
-                </select>
-                
-                <label style="display: flex; align-items: center; gap: 5px;">
-                    <input type="checkbox" id="auto-continue-chat" checked> Auto-continue chat
-                </label>
-            </div>
-            
-            <div class="conversation-display" style="background: white; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; margin-bottom: 20px; max-height: 300px; overflow-y: auto;">
-                <h4 style="color: #495057; margin-top: 0;">💬 Conversation History</h4>
-                <div id="conversation-messages" style="font-family: monospace; font-size: 14px;">
-                    <div style="color: #6c757d; font-style: italic;">Start a conversation to see chat history...</div>
+            <div class="conversation-display">
+                <h4>💬 Conversation History</h4>
+                <div id="conversation-messages">
+                    <div style="color: #6c757d; font-style: italic; text-align: center; padding: 20px;">
+                        Start a conversation to see your chat history here...
+                    </div>
                 </div>
             </div>
             
-            <div id="chat-response-section" style="display: none; background: white; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; margin-top: 20px;">
-                <h4 style="color: #495057;">🔊 AI Response Audio</h4>
-                <audio id="chat-audio-player" controls style="width: 100%; height: 50px; margin: 15px 0; border-radius: 8px;"></audio>
-                <div class="response-details" style="font-size: 12px; color: #6c757d; margin-top: 10px;">
-                    <div><strong>Processing Time:</strong> <span id="chat-processing-time">...</span></div>
-                    <div><strong>Session Messages:</strong> <span id="session-message-count">...</span></div>
+            <div id="chat-response-section">
+                <h4>🔊 AI Response</h4>
+                <audio id="chat-audio-player" preload="auto"></audio>
+                <div class="response-details">
+                    <div class="response-detail">
+                        <strong>Processing Time:</strong> <span id="chat-processing-time">...</span>
+                    </div>
+                    <div class="response-detail">
+                        <strong>Session Messages:</strong> <span id="session-message-count">...</span>
+                    </div>
                 </div>
             </div>
             
-            <div id="chat-status" style="margin-top: 15px; color: #495057; font-style: italic;">Ready to start a conversation...</div>
-        </div>
-
-        <!-- Day 9: Voice-to-Voice AI Section -->
-        <div id="voice-ai-section" style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 15px; padding: 25px; margin: 25px 0; text-align: left;">
-            <h1 style="font-size: 2em; color: #d68910; margin-bottom: 15px;">🎤🤖 Voice-to-Voice AI Assistant</h1>
-            <p style="color: #495057; margin-bottom: 15px;">Speak your question → AI processes → Hear the response in AI voice!</p>
-            
-            <div class="voice-ai-controls" style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
-                <button id="start-voice-ai-btn" onclick="startVoiceAI()">🎙️ Ask AI (Voice)</button>
-                <button id="stop-voice-ai-btn" onclick="stopVoiceAI()" disabled>⏹️ Stop Recording</button>
-                
-                <select id="ai-voice-selector" style="padding: 8px 12px; border: 2px solid #ced4da; border-radius: 6px;">
-                    <option value="en-US-natalie">Natalie (Female)</option>
-                    <option value="en-UK-emma">Emma (UK Female)</option>
-                    <option value="en-US-mike">Mike (Male)</option>
-                    <option value="en-US-jane">Jane (Female)</option>
-                </select>
-                
-                <select id="ai-model-selector" style="padding: 8px 12px; border: 2px solid #ced4da; border-radius: 6px;">
-                    <option value="gemini-1.5-flash">Gemini Flash (Fast)</option>
-                    <option value="gemini-1.5-pro">Gemini Pro (Advanced)</option>
-                </select>
-            </div>
-            
-            <div id="voice-ai-response-section" style="display: none; background: white; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; margin-top: 20px;">
-                <h4 style="color: #495057;">🔊 AI Response Audio</h4>
-                <audio id="voice-ai-audio-player" controls style="width: 100%; height: 50px; margin: 15px 0; border-radius: 8px;"></audio>
-                <div class="response-details" style="font-size: 12px; color: #6c757d; margin-top: 10px;">
-                    <div><strong>Your Question:</strong> <span id="transcribed-question">...</span></div>
-                    <div><strong>AI Response:</strong> <span id="ai-response-text">...</span></div>
-                    <div><strong>Processing Time:</strong> <span id="processing-time">...</span></div>
-                </div>
-            </div>
-            
-            <div id="voice-ai-status" style="margin-top: 15px; color: #495057; font-style: italic;">Ready to listen to your voice...</div>
-        </div>
-        
-        <!-- Audio Player Section -->
-        <div id="audio-section" style="display: none;">
-            <h4 style="color: #495057;">🎵 Generated Audio</h4>
-            <audio id="audio-player" controls preload="none">
-                Your browser does not support the audio element.
-            </audio>
-            <div class="audio-info">
-                <p><strong>Audio URL:</strong></p>
-                <div class="url-display" id="audio-url-display">Generating...</div>
-            </div>
-        </div>
-        
-        <!-- Additional Controls -->
-        <div class="additional-controls">
-            <button onclick="checkHealth()">Check API Health</button>
-            <button onclick="getVoiceAgents()">Get Voice Agents Info</button>
-        </div>
-        
-        <div id="response">
-            <em>Click a button to test the backend connection...</em>
+            <div id="chat-status">Ready to start a conversation...</div>
         </div>
     </div>
 
