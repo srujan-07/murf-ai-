@@ -1,307 +1,198 @@
-# 🎤🤖 Voice AI Chat Agent
+# Voice Agents Backend - Refactored
 
-A robust, conversational AI agent with voice input/output, chat history, and comprehensive error handling. Built with FastAPI, AssemblyAI, Google Gemini, and Murf TTS.
+A clean, maintainable FastAPI backend for voice agents with TTS, STT, LLM integration, and voice-to-voice AI pipeline.
 
-## 🌟 Features
+## 🚀 Features
 
-### 🎯 Core Capabilities
-- **Voice-to-Voice AI**: Speak to the AI and hear responses back
-- **Chat History & Memory**: Persistent conversation context across sessions
-- **Multi-Modal Input**: Voice, text, and file uploads
-- **Real-time Transcription**: High-accuracy speech-to-text
-- **Natural Voice Output**: High-quality AI-generated speech
-- **Session Management**: URL-based conversation tracking
-
-### 🛡️ Robustness & Error Handling
-- **Graceful Degradation**: System continues functioning with partial service failures
-- **Smart Fallbacks**: Context-aware error responses for each service type
-- **Alternative Audio**: Browser speech synthesis when cloud TTS fails
-- **Visual Error Indicators**: Clear user feedback with error categorization
-- **Service Health Monitoring**: Real-time API status checking
-
-### 🎨 User Experience
-- **Intuitive Interface**: Clean, responsive web UI
-- **Auto-Continue Conversations**: Seamless chat flow
-- **Voice Selection**: Multiple AI voices to choose from
-- **Model Selection**: Choose between different AI models
-- **Real-time Status**: Live feedback during processing
+- **Text-to-Speech (TTS)**: Convert text to natural-sounding speech using Murf API
+- **Speech-to-Text (STT)**: Transcribe audio files using AssemblyAI
+- **Language Model Integration**: Generate responses using Google Gemini
+- **Voice-to-Voice AI**: Complete conversational bot with audio input/output
+- **Chat Sessions**: Maintain conversation history and context
+- **Health Monitoring**: Comprehensive API health checks
+- **Clean Architecture**: Well-organized, maintainable code structure
 
 ## 🏗️ Architecture
 
+The application follows a clean, modular architecture:
+
 ```
-Voice Input → AssemblyAI STT → Google Gemini LLM → Murf TTS → Audio Output
-     ↓              ↓                ↓               ↓            ↓
-  WebM Audio → Text Transcript → AI Response → Audio URL → Browser Playback
+app/
+├── models/          # Pydantic schemas for request/response validation
+├── services/        # Business logic for TTS, STT, and LLM operations
+├── routers/         # API endpoint handlers organized by feature
+├── utils/           # Utility functions for logging and file operations
+└── main.py         # Application entry point and configuration
 ```
 
-### 🔧 Technology Stack
+### Key Components
 
-**Backend:**
-- **FastAPI**: Modern, fast Python web framework
-- **AssemblyAI**: Speech-to-text transcription
-- **Google Gemini**: Large language model for AI responses
-- **Murf TTS**: High-quality text-to-speech synthesis
-- **Python 3.13**: Latest Python with type hints
+- **Models**: Pydantic schemas ensure type safety and validation
+- **Services**: Encapsulate business logic and external API interactions
+- **Routers**: Handle HTTP requests and responses with proper error handling
+- **Utils**: Provide logging, file management, and other utilities
 
-**Frontend:**
-- **Vanilla JavaScript**: No framework dependencies
-- **MediaRecorder API**: Browser-native audio recording
-- **SpeechSynthesis API**: Fallback text-to-speech
-- **HTML5**: Modern web standards
+## 🛠️ Installation
 
-**APIs & Services:**
-- **AssemblyAI API**: Real-time speech recognition
-- **Google Gemini API**: Advanced language understanding
-- **Murf API**: Professional voice synthesis
-
-## 🚀 Quick Start
-
-### Prerequisites
-- Python 3.11+
-- API Keys for:
-  - [AssemblyAI](https://www.assemblyai.com/)
-  - [Google Gemini](https://makersuite.google.com/app/apikey)
-  - [Murf](https://murf.ai/api)
-
-### Installation
-
-1. **Clone the repository:**
+1. Clone the repository:
 ```bash
-git clone https://github.com/srujan-07/murf-ai-.git
-cd murf-ai-
+git clone <your-repo-url>
+cd voice-agents-backend
 ```
 
-2. **Create virtual environment:**
+2. Create a virtual environment:
 ```bash
 python -m venv .venv
-.venv\Scripts\activate  # Windows
-# source .venv/bin/activate  # macOS/Linux
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 ```
 
-3. **Install dependencies:**
+3. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-4. **Configure environment variables:**
+4. Set up environment variables:
 ```bash
 cp .env.example .env
 # Edit .env with your API keys
 ```
 
-Example `.env` file:
-```properties
-# Murf API Configuration
+## 🔑 Environment Variables
+
+Create a `.env` file with the following variables:
+
+```env
 MURF_API_KEY=your_murf_api_key_here
-
-# AssemblyAI API Configuration
 ASSEMBLY_AI_API_KEY=your_assemblyai_api_key_here
-
-# Google Gemini API Configuration
 GEMINI_API_KEY=your_gemini_api_key_here
-
-# Server Configuration
-HOST=0.0.0.0
-PORT=8000
-DEBUG=True
 ```
 
-5. **Start the server:**
+## 🚀 Running the Application
+
+### Development Mode
 ```bash
-uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+python main.py
 ```
 
-6. **Open your browser:**
-Visit `http://localhost:8000` to start using the voice AI chat agent!
+### Production Mode
+```bash
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
 
-## 📖 Usage Guide
+The API will be available at `http://localhost:8000`
 
-### 🎙️ Basic Voice Chat
-1. Click "Start Talking" to begin recording
-2. Speak your question or message
-3. Click "Stop & Send" to process
-4. Listen to the AI's voice response
-5. Continue the conversation with context preserved
+## 📚 API Endpoints
 
-### 💬 Session Management
-- **Auto Session ID**: Generated automatically and stored in URL
-- **Custom Session ID**: Enter your own session identifier
-- **Session History**: View past conversation messages
-- **Clear History**: Reset conversation context
-
-### ⚙️ Configuration Options
-- **Voice Selection**: Choose from multiple AI voices
-- **Model Selection**: Pick AI model (Flash for speed, Pro for quality)
-- **Auto-continue**: Automatically prepare for next message after response
-- **Temperature**: Control AI response creativity (0.0-1.0)
-
-## 🔌 API Endpoints
-
-### Chat & Voice
-- `POST /api/agent/chat/{session_id}` - Voice chat with session memory
-- `POST /api/llm/query/audio` - Voice-to-voice AI (stateless)
-- `POST /api/llm/query` - Text-based LLM queries
-
-### Core Services
-- `POST /api/tts/generate` - Text-to-speech generation
-- `POST /api/transcribe/file` - Audio file transcription
-- `POST /api/tts/echo` - Echo bot with voice
-
-### Utilities
-- `GET /api/health` - Basic health check
+### Health Checks
+- `GET /api/health` - Simple health check
 - `GET /api/health/detailed` - Detailed service status
-- `GET /api/agent/chat/{session_id}/history` - Chat history
-- `POST /api/audio/upload` - Audio file upload
 
-## 🧪 Testing & Development
+### Text-to-Speech
+- `POST /api/tts/generate` - Convert text to speech
+- `GET /api/tts/voices` - Get available voices
 
-### Test Scripts
+### Speech-to-Text
+- `POST /api/stt/transcribe-file` - Transcribe uploaded audio
+- `POST /api/stt/transcribe-path` - Transcribe audio from file path
+- `POST /api/stt/upload` - Upload audio file
+
+### Language Models
+- `POST /api/llm/generate` - Generate LLM response
+- `POST /api/llm/query` - Query LLM with parameters
+- `GET /api/llm/models` - Get available models
+
+### Voice Agent
+- `POST /api/agent/chat` - Chat with voice agent
+- `POST /api/agent/echo` - Echo bot functionality
+- `POST /api/agent/audio-query` - Audio query through LLM
+- `GET /api/agent/sessions` - List chat sessions
+- `GET /api/agent/sessions/{id}` - Get session details
+- `DELETE /api/agent/sessions/{id}` - Delete session
+
+## 🎯 Usage Examples
+
+### Basic TTS
 ```bash
-# Test chat functionality
-python test_chat_agent.py
-
-# Test error handling scenarios
-python test_error_handling.py
-
-# Error handling documentation
-python test_error_demo.py
-
-# TTS-specific error testing
-python test_tts_error.py
+curl -X POST "http://localhost:8000/api/tts/generate" \
+     -H "Content-Type: application/json" \
+     -d '{"text": "Hello, world!", "voice_id": "en-US-natalie"}'
 ```
 
-### Error Simulation
-The system includes tools to simulate API failures for testing:
+### Audio Transcription
+```bash
+curl -X POST "http://localhost:8000/api/stt/transcribe-file" \
+     -F "file=@audio.wav"
+```
+
+### Chat with Agent
+```bash
+curl -X POST "http://localhost:8000/api/agent/chat" \
+     -F "audio_file=@user_audio.wav"
+```
+
+## 🔧 Development
+
+### Code Structure
+- **Models**: Define request/response schemas using Pydantic
+- **Services**: Implement business logic and external API calls
+- **Routers**: Handle HTTP endpoints with proper error handling
+- **Utils**: Provide logging, file operations, and other utilities
+
+### Adding New Features
+1. Create schemas in `app/models/schemas.py`
+2. Implement business logic in `app/services/`
+3. Add endpoints in `app/routers/`
+4. Update the main application in `app/main.py`
+
+### Logging
+The application uses structured logging throughout:
+- Request/response logging
+- Error tracking
+- Performance monitoring
+- Service health status
+
+## 🧪 Testing
+
+Run tests to ensure everything works correctly:
 
 ```bash
-# Simulate different failure scenarios
-python test_error_handling.py
-# Choose: STT failure, LLM failure, TTS failure, or complete failure
+# Install test dependencies
+pip install pytest pytest-asyncio
+
+# Run tests
+pytest
 ```
 
-### Health Monitoring
-```bash
-# Check service status
-curl http://localhost:8000/api/health/detailed
-```
+## 📦 Dependencies
 
-## 🛡️ Error Handling
-
-### Graceful Degradation
-- **STT Failure**: "Sorry, I couldn't understand due to technical issue"
-- **LLM Failure**: "Having trouble processing your request right now"
-- **TTS Failure**: Text response + browser speech synthesis backup
-- **Network Issues**: Clear user guidance with retry suggestions
-
-### Visual Indicators
-- **Green**: Successful operations
-- **Yellow**: Warnings or degraded service
-- **Red**: Errors with clear explanations
-- **Blue**: Processing states
-
-### Fallback Mechanisms
-1. **Browser TTS**: When cloud TTS fails
-2. **Predefined Responses**: When LLM is unavailable
-3. **Error Messages**: When STT fails
-4. **Conversation Continuity**: Context preserved across failures
-
-## 📁 Project Structure
-
-```
-murf-ai-/
-├── main.py                 # FastAPI application
-├── requirements.txt        # Python dependencies
-├── .env.example           # Environment template
-├── README.md              # This file
-├── static/
-│   ├── index.html         # Web interface
-│   └── app.js            # Frontend JavaScript
-├── uploads/               # Temporary audio files
-├── __pycache__/          # Python cache
-└── tests/
-    ├── test_chat_agent.py     # Chat functionality tests
-    ├── test_error_handling.py # Error simulation tools
-    ├── test_error_demo.py     # Error documentation
-    └── test_tts_error.py      # TTS error testing
-```
-
-## 🎯 Development Journey
-
-This project was built incrementally over 11 days:
-
-- **Day 1-3**: Basic TTS with Murf API
-- **Day 4-5**: Audio upload and file handling
-- **Day 6**: Speech-to-text transcription
-- **Day 7**: Echo bot functionality
-- **Day 8**: LLM integration with Gemini
-- **Day 9**: Voice-to-voice AI pipeline
-- **Day 10**: Chat history and session management
-- **Day 11**: Comprehensive error handling and robustness
-
-## 🔐 Security & Privacy
-
-- **API Keys**: Stored securely in environment variables
-- **File Cleanup**: Uploaded audio files automatically deleted
-- **Session Isolation**: Chat histories separated by session ID
-- **Input Validation**: All inputs sanitized and validated
-- **Error Handling**: No sensitive information exposed in errors
-
-## 🚀 Deployment
-
-### Local Development
-```bash
-uvicorn main:app --host 0.0.0.0 --port 8000 --reload
-```
-
-### Production
-```bash
-uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4
-```
-
-### Environment Variables
-Ensure all required API keys are set in production:
-- `MURF_API_KEY`
-- `ASSEMBLY_AI_API_KEY`
-- `GEMINI_API_KEY`
+- **FastAPI**: Modern, fast web framework
+- **Pydantic**: Data validation using Python type annotations
+- **Uvicorn**: ASGI server for running FastAPI
+- **Murf**: Text-to-speech API
+- **AssemblyAI**: Speech-to-text API
+- **Google Generative AI**: Language model integration
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## 🙏 Acknowledgments
 
-- **AssemblyAI** for excellent speech recognition
-- **Google Gemini** for powerful language understanding
-- **Murf** for high-quality voice synthesis
-- **FastAPI** for the excellent web framework
+- Built as part of the "30 Days of Voice Agents" challenge
+- Inspired by modern AI voice assistant technologies
+- Uses industry-standard APIs for TTS, STT, and LLM capabilities
 
 ## 📞 Support
 
-If you encounter any issues or have questions:
-
-1. Check the [Issues](https://github.com/srujan-07/murf-ai-/issues) page
-2. Review the error handling documentation in `test_error_demo.py`
-3. Run the health check: `curl http://localhost:8000/api/health/detailed`
-
-## 🎯 Future Enhancements
-
-- **Database Integration**: Persistent chat history storage
-- **User Authentication**: Multi-user support
-- **Voice Cloning**: Custom voice training
-- **Real-time Streaming**: Live audio processing
-- **Mobile App**: Native iOS/Android applications
-- **Multi-language Support**: International voice agents
-
----
-
-Built with ❤️ by [Srujan](https://github.com/srujan-07)
-
-**Start building the future of voice AI today!** 🚀🎤🤖
+For questions or issues:
+- Create an issue in the repository
+- Check the API documentation at `/docs` when running the server
+- Review the health check endpoints for service status
