@@ -5,7 +5,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 # Import routers
-from app.routers import health, tts, stt, llm, agent
+from app.routers import health, tts, stt, llm, agent, websocket
 
 # Import utilities
 from app.utils.logging import setup_logging
@@ -36,6 +36,7 @@ app.include_router(tts.router)
 app.include_router(stt.router)
 app.include_router(llm.router)
 app.include_router(agent.router)
+app.include_router(websocket.router)
 
 @app.get("/")
 async def read_root():
@@ -54,7 +55,8 @@ async def api_info():
             "tts": "/api/tts",
             "stt": "/api/stt", 
             "llm": "/api/llm",
-            "agent": "/api/agent"
+            "agent": "/api/agent",
+            "websocket": "/ws"
         }
     }
 
