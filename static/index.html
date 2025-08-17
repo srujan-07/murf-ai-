@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>30 Days of Voice Agents - Day 12</title>
+    <title>30 Days of Voice Agents - Day 16</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -277,6 +277,16 @@
             border-left: 4px solid #9c27b0;
         }
         
+        .system-message {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .error-message {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+        }
+        
         @keyframes fadeInUp {
             from {
                 opacity: 0;
@@ -406,7 +416,7 @@
     <div class="container">
         <div class="microphone">🎤</div>
         <h1>Voice Agents Project</h1>
-        <div class="day-badge">Day 12: UI Revamp & Enhanced Experience</div>
+        <div class="day-badge">Day 16: Streaming Audio Recording</div>
         
         <div class="status">
             <strong>Status:</strong> <span id="status">Ready for conversation</span>
@@ -414,8 +424,8 @@
         
         <!-- Day 12: Enhanced Chat Agent UI Section -->
         <div id="chat-agent-section">
-            <h1>💬🧠 AI Conversation Agent</h1>
-            <p>Have intelligent conversations with AI! Your agent remembers context and responds naturally.</p>
+            <h1>🎙️📡 Streaming Audio Recorder</h1>
+            <p>Record and stream audio data to the server using WebSockets. Audio is saved to files in real-time.</p>
             
             <div class="session-info">
                 <div class="session-controls">
@@ -455,31 +465,30 @@
             </div>
             
             <div class="conversation-display">
-                <h4>💬 Conversation History</h4>
+                <h4>📡 WebSocket Messages & Status</h4>
                 <div id="conversation-messages">
                     <div style="color: #6c757d; font-style: italic; text-align: center; padding: 20px;">
-                        Start a conversation to see your chat history here...
+                        Connect to WebSocket and start recording to see real-time status...
                     </div>
                 </div>
             </div>
             
             <div id="chat-response-section">
-                <h4>🔊 AI Response</h4>
-                <audio id="chat-audio-player" preload="auto"></audio>
+                <h4>📊 Recording Statistics</h4>
                 <div class="response-details">
                     <div class="response-detail">
-                        <strong>Processing Time:</strong> <span id="chat-processing-time">...</span>
+                        <strong>Audio Chunks:</strong> <span id="chunk-count-display">0</span>
                     </div>
                     <div class="response-detail">
-                        <strong>Session Messages:</strong> <span id="session-message-count">...</span>
+                        <strong>Total Bytes:</strong> <span id="bytes-display">0 KB</span>
                     </div>
                 </div>
             </div>
             
-            <div id="chat-status">Ready to start a conversation...</div>
+            <div id="chat-status">Connecting to WebSocket...</div>
         </div>
     </div>
 
-    <script src="/static/app.js"></script>
+    <script src="/static/app_new.js"></script>
 </body>
 </html>
