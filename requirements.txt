@@ -7,3 +7,4 @@ murf==0.1.0
 assemblyai==0.21.0
 google-generativeai==0.3.2
 pathlib2==2.3.7
+websockets==12.0
